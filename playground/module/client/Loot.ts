@@ -1,5 +1,6 @@
 import { Vault, Gribi, Utils } from 'gribi-js';
-import ClaimLoot from './circuits'
+import ClaimLoot from './circuits/claimLoot.json'
+import RevealLoot from './circuits/revealLoot.json'
 
 export type PrivateEntry = {
     __id: string,
@@ -95,15 +96,22 @@ export const claimTreasure = async (publicRandomness: number, boxKey: BoxEntry) 
 
     const transaction = {
         data: {
-            commitment,
+            commitment, //new commitment to the item
             nullifier: Utils.pedersenHash(commitment, Vault.walletAddress)
         },
-        nullifier: Utils.pedersenHash(boxKey.commitment, 
+        nullifier: Utils.pedersenHash(boxKey.commitment, Vault.walletAddress) //old commitment nullifier to the randomness commitment
     }
 
-    const proof = Gribi.prove(claimLoot, {
-        public_context: {...},
-        private_context: {...},
+    const proof = Gribi.prove(ClaimLoot, {
+        //we're going to inject in here the public commitment on the contract side when we double-check the proof
+        public_context: {
+            namespace: Utils.namespaceHash("Loot"),
+        }, 
+        private_context: {
+            player_storage: [
+                joinedRandomness, salt, treasureItemIndex
+            ]
+        },
         transaction,
     });
 
@@ -116,6 +124,18 @@ export const claimTreasure = async (publicRandomness: number, boxKey: BoxEntry) 
 }
 
 export const revealTreasure = async (treasure: TreasureEntry) => {
+    const proof = Gribi.prove(RevealLoot, {
+        //the public context here needs to include the commitment to the treasure and also the opening
+        public_context: {
+            player_storage: [treasure.value.treasureItemIndex],
+        }, 
+        private_context: {
+
+        },
+        transaction: {
+            nullifier: Utils.pedersenHash([treasure.commitment, Vault.walletAddress])
+        },
+    });
     Vault.remove(treasure).onCondition(
         Gribi.send
     )
