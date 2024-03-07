@@ -1,0 +1,8 @@
+[package]
+name = "claimLoot"
+type = "bin"
+authors = [""]
+compiler_version = ">=0.23.0"
+
+[dependencies]
+gribi_std = { path = "../../node_modules/gribi-circuits/gribi-std"}

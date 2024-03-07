@@ -7,6 +7,8 @@ import { TerrainType } from "../src/codegen/common.sol";
 import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 import { EncounterTrigger, MapConfig, Obstruction, Position } from "../src/codegen/index.sol";
 import { positionToEntityKey } from "../src/positionToEntityKey.sol";
+
+import { GribiSetup } from "./GribiSetup.s.sol";
  
 contract PostDeploy is Script {
   function run(address worldAddress) external {
@@ -66,6 +68,7 @@ contract PostDeploy is Script {
     }
  
     MapConfig.set(width, height, terrain);
+    GribiSetup.run();
  
     vm.stopBroadcast();
   }

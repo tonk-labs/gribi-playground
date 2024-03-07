@@ -1,30 +1,18 @@
-import { Vault, Gribi, Utils } from 'gribi-js';
-import ClaimLoot from './circuits/claimLoot.json'
-import RevealLoot from './circuits/revealLoot.json'
+import { Vault, NetworkCall, Forest, Utils, Gribi, KernelCircuit, PrivateEntry, PublicInput, Operation, Proof, Transaction } from 'gribi-js';
+import ClaimLoot from '../circuits/claimLoot/target/claimLoot.json';
+import RevealLoot from '../circuits/revealLoot/target/revealLoot.json';
 
-export type PrivateEntry = {
-    __id: string,
-    commitment: Field,
-    nonce?: number, 
-    value: any,
-}
 
 type Field = number | string;
 
-type PrivateData = {
-    variables: PrivateEntry[], 
-    commitments: Record<string, PrivateEntry>
-}
-
-type TransactionData = {
+type OperationData = {
     commitment: Field,
     nullifier?: Field 
 }
 
-type Transaction = {
-    data: TransactionData,
-    seffect: Storage,
-    nullifier: Field 
+type OperationPackage = {
+    entries: PrivateEntry[],
+    data: Operation[],
 }
 
 type Storage = {
@@ -54,13 +42,47 @@ interface TreasureEntry extends PrivateEntry {
     value: TreasureValue
 }
 
-export const openTreasureBox = async (treasureBoxTypeID: number, instanceID: number) => {
+type CallValue = {
+    entries: PrivateEntry[],
+    data: Operation[]
+}
+
+// type PublicInput = {
+//     slot: Field,
+//     value: Field,
+// }
+
+const getInstanceId = (publicStateTree: any): SelectorIndex => {
+    //select the instanceID from publicStateTree
+}
+
+//user needs to fetch the state trees
+//user calls the fn with relevant params
+//fn returns with private stuff, Operation data
+//private stuff goes into vault, Operation data goes into circuit with state trees (all circuits expect the trees)
+//Operation data and proof goes to gribi (trees are popped in by verifier as well)
+//system fn calls gribi with Operation data and proof and then updates the state accordingly
+//client picks up changes to trees
+
+//we could basically specify that any public state variables need to included as public inputs to the circuit
+//then in the calldata we give the solidity contract the necessary information it needs to find that data (we just hash it)
+
+//so then the operation goes like...
+//pub inputs (slot, value) which is hashed with users address and merkle proof down on chain
+//pub operations (what we already have)
+//inf witnesses
+
+const TREASURE_ID = "treasure-module";
+
+
+export const openTreasureBox = async (call: NetworkCall, treasureBoxTypeID: number, instanceID: PublicInput) => {
+    //the index in the public state tree index would be hash(instanceID, walletAddress, slot) ? and we'll always know which slot for each address (this simulates private user state over one single tree)
     const randomness = Math.random();
     const salt = Math.random() * 1000000000;
-    const commitment = Utils.pedersenHash([treasureBoxTypeID, instanceID, randomness, salt]);
-    const boxKey = {
-        __id: String(commitment),
-        commitment: commitment,
+    const commitment = await Utils.pedersenHash([BigInt(treasureBoxTypeID), BigInt(instanceID.value), BigInt(randomness), BigInt(salt)]);
+    const boxKey: PrivateEntry = {
+        commitment: commitment.toString(),
+        slot: 1,
         value: {
             randomness,
             salt,
@@ -68,17 +90,28 @@ export const openTreasureBox = async (treasureBoxTypeID: number, instanceID: num
             instanceID
         }
     };
-    // this is kinda weird actually, because we need some way to guarantee the nullifier is computed correctly to avoid abuse actually :( — we can just do it contract side —f it
-    Vault.store(boxKey).onCondition(
-        Gribi.sendWithoutProof({
-            route: { namespace: "Loot", fn: "openBox" },
-            data: {
-                commitment: boxKey.commitment,
-            }
-    }));
+    const data = [{
+        type: 0,
+        value: commitment,
+        slot: 1,
+    }];
+
+    const tx = await Gribi.createGribiTx(
+        TREASURE_ID,
+        [instanceID],
+        data
+    )
+    // make the network call
+    await call(tx);
+    Vault.setEntry(Gribi.walletAddress, TREASURE_ID, boxKey);
 }
 
-export const claimTreasure = async (publicRandomness: number, boxKey: BoxEntry) => {
+
+
+
+//TODO:
+//public randomness needs to be in public tree, treasureItems 
+export const claimTreasure = async (publicRandomness: number, boxKey: BoxEntry): Promise<OperationPackage[]> => {
     const joinedRandomness = Utils.pedersenHash([publicRandomness, boxKey.value.randomness]); //we just take lower bits
     //determine the index into the tresure array
     const treasureItemIndex = 20;
@@ -87,6 +120,8 @@ export const claimTreasure = async (publicRandomness: number, boxKey: BoxEntry) 
     const treasure = {
         __id: String(commitment),
         commitment: commitment,
+        //TODO:
+        slot: 2, //player might have lots of secret treasure, so you kind of wanna "update a data structure" not just outright overwrite it
         value: {
             joinedRandomness,
             salt,
@@ -94,13 +129,29 @@ export const claimTreasure = async (publicRandomness: number, boxKey: BoxEntry) 
         }
     };
 
-    const transaction = {
+    //two Operations
+    //means this logic needs to somehow describe where the relevant state lives on the state tree 
+    //commit Operation for treasure (prove the commitment computed right and nullifier is just commitment)
+    //nullify the old commit (prove this was computed right) — prove the hash
+
+    const Operation = {
         data: {
             commitment, //new commitment to the item
-            nullifier: Utils.pedersenHash(commitment, Vault.walletAddress)
         },
-        nullifier: Utils.pedersenHash(boxKey.commitment, Vault.walletAddress) //old commitment nullifier to the randomness commitment
+        nullifier: Utils.pedersenHash(boxKey.commitment, boxKey.value.instanceID) //old commitment nullifier to the randomness commitment
     }
+    
+    return [{
+        entries: [treasure],
+        data: [{
+            type: 0,
+            slot: 2,
+            value: commitment,
+        }, {
+            type: 0,
+            nullifier: Operation.nullifier,
+        }]
+    }]
 
     const proof = Gribi.prove(ClaimLoot, {
         //we're going to inject in here the public commitment on the contract side when we double-check the proof
@@ -112,14 +163,14 @@ export const claimTreasure = async (publicRandomness: number, boxKey: BoxEntry) 
                 joinedRandomness, salt, treasureItemIndex
             ]
         },
-        transaction,
+        Operation,
     });
 
     Vault.store(treasure).onCondition(
         Gribi.send({
             route: { namespace: "Loot", fn: "claimLoot" },
             proof,
-            transaction
+           Operation 
         }));
 }
 
@@ -132,7 +183,7 @@ export const revealTreasure = async (treasure: TreasureEntry) => {
         private_context: {
 
         },
-        transaction: {
+        Operation: {
             nullifier: Utils.pedersenHash([treasure.commitment, Vault.walletAddress])
         },
     });

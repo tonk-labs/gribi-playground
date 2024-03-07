@@ -41,6 +41,13 @@ export default mudConfig({
     Monster: "MonsterType",
     Movable: "bool",
     Obstruction: "bool",
+    GribiConfig: {
+      keySchema: {},
+      dataStruct: false,
+      valueSchema: {
+        contractAddress: "address",
+      }
+    },
     OwnedBy: "bytes32",
     Player: "bool",
     Position: {

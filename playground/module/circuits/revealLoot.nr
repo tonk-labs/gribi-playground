@@ -1,1 +1,0 @@
-//looks exactly like claimLoot
