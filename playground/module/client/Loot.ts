@@ -47,11 +47,6 @@ type CallValue = {
     data: Operation[]
 }
 
-// type PublicInput = {
-//     slot: Field,
-//     value: Field,
-// }
-
 const getInstanceId = (publicStateTree: any): SelectorIndex => {
     //select the instanceID from publicStateTree
 }
@@ -96,8 +91,11 @@ export const openTreasureBox = async (call: NetworkCall, treasureBoxTypeID: numb
         slot: 1,
     }];
 
+    //TODO: we can generate ABI for this eventually
     const tx = await Gribi.createGribiTx(
         TREASURE_ID,
+        //TODO: eventually Gribi should generate this
+        "openBox", //this could be hash of method signature, but it determines which fn receives input for this tx
         [instanceID],
         data
     )
@@ -138,6 +136,7 @@ export const claimTreasure = async (publicRandomness: number, boxKey: BoxEntry):
         data: {
             commitment, //new commitment to the item
         },
+        //we can check in here the proof that the nullifier is formed correctly and that should be enough
         nullifier: Utils.pedersenHash(boxKey.commitment, boxKey.value.instanceID) //old commitment nullifier to the randomness commitment
     }
     
