@@ -26,6 +26,9 @@
     "react-toastify": "^9.1.2",
     "rxjs": "7.5.5",
     "tailwind-merge": "^1.11.0",
+    "@noir-lang/backend_barretenberg": "^0.23.0",
+    "@noir-lang/noir_js": "^0.23.0",
+    "@noir-lang/noirc_abi": "^0.23.0",
     "viem": "^1.14.0"
   },
   "devDependencies": {

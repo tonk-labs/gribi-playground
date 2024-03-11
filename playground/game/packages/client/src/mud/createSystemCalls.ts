@@ -9,6 +9,10 @@ export function createSystemCalls(
   { playerEntity, worldContract, waitForTransaction }: SetupNetworkResult,
   { Encounter, MapConfig, MonsterCatchAttempt, Obstruction, Player, Position }: ClientComponents
 ) {
+  const registerModules = async () => {
+    const tx = await worldContract.write.registerModules();
+    await waitForTransaction(tx);
+  }
   const wrapPosition = (x: number, y: number) => {
     const mapConfig = getComponentValue(MapConfig, singletonEntity);
     if (!mapConfig) {
@@ -94,6 +98,7 @@ export function createSystemCalls(
   };
  
   return {
+    registerModules,
     moveBy,
     spawn,
     throwBall,

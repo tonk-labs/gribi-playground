@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import { BaseThread } from "../node_modules/gribi-contracts/src/BaseThread.sol";
-import { Operation, Transaction } from "../node_modules/gribi-contracts/src/Structs.sol";
-import { Forest } from "../node_modules/gribi-contracts/src/Forest.sol";
+import { BaseThread } from "@gribi/src/BaseThread.sol";
+import { Operation, Transaction } from "@gribi/src/Structs.sol";
+import { Forest } from "@gribi/src/Forest.sol";
 
 contract Loot is BaseThread {
     function getModuleID() public virtual override returns (uint256) {
@@ -16,12 +16,10 @@ contract Loot is BaseThread {
     }
     //keyhash 3034934
     function claimLoot(Transaction memory transaction) external {
-        
+
     }
     //keyhash 309403402
     function revealLoot(Transaction memory transaction) external {
 
     }
 }
-
-

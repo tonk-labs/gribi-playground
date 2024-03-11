@@ -1,24 +1,32 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
 
 import { System } from "@latticexyz/world/src/System.sol";
 import { GribiConfig } from "../codegen/index.sol";
-import { Gribi, PublicInput } from "@gribi/src/Gribi.sol";
-import { Operation, Proof, Transaction } from "@gribi/src/Structs.sol";
+import { Gribi } from "@gribi/src/Gribi.sol";
+import { Operation, PublicInput, Proof, Transaction } from "@gribi/src/Structs.sol";
 import { BaseThread } from "@gribi/src/BaseThread.sol";
 import { Forest } from "@gribi/src/Forest.sol";
 
+import { Loot } from "../gribi/Loot.sol"; 
+
 contract GribiSystem is System {
+    function registerModules() public {
+        Gribi gribi = Gribi(GribiConfig.get());
+        BaseThread[] memory threads = new BaseThread[](1);
+        threads[0] = BaseThread(new Loot());
+        gribi.registerThreads(threads);
+    }
     function call(uint256 id, bytes calldata data) public {
+        Gribi gribi = Gribi(GribiConfig.get());
         //find the module
-        BaseThread thread = Gribi.getThread(id);
+        BaseThread thread = gribi.getThread(id);
 
         //if the proof passes, shuffle along the inputs and ops to the function of the module
         address(thread).call(data);
     }
-    function call(uint256 id, bytes calldata data, Proof proof) public {
+    function call(uint256 id, bytes calldata data, Proof calldata proof) public {
+        Gribi gribi = Gribi(GribiConfig.get());
         //find the module
-        BaseThread thread = Gribi.getThread(id);
+        BaseThread thread = gribi.getThread(id);
 
         //TODO:
         //if there is a proof, verify it
