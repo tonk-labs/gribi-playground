@@ -2,17 +2,43 @@ import { Has, HasValue, getComponentValue, runQuery } from "@latticexyz/recs";
 import { ClientComponents } from "./createClientComponents";
 import { SetupNetworkResult } from "./setupNetwork";
 import { singletonEntity } from "@latticexyz/store-sync/recs";
+import { Module, NetworkCall, Transaction } from "gribi-js";
  
 export type SystemCalls = ReturnType<typeof createSystemCalls>;
+
+import Modules from "../gribi";
  
 export function createSystemCalls(
   { playerEntity, worldContract, waitForTransaction }: SetupNetworkResult,
   { Encounter, MapConfig, MonsterCatchAttempt, Obstruction, Player, Position }: ClientComponents
 ) {
+  /**
+   * GRIBI Stuff
+   */
   const registerModules = async () => {
     const tx = await worldContract.write.registerModules();
     await waitForTransaction(tx);
   }
+
+  const mudCall: NetworkCall = async (transaction: Transaction) => {
+    let tx;
+    if (transaction.proof) {
+      tx = await worldContract.write.call(transaction.id, transaction.data);
+    } else {
+      tx = await worldContract.write.call(transaction.id, transaction.data, transaction.proof);
+    }
+    await waitForTransaction(tx);
+  };
+
+  function combineGribiModuleCalls<T>(modules: Module<T>[]): T {
+    return modules.map((module) => module.createModuleCalls(mudCall)).reduce((acc, value) => {
+      return {
+        ...acc,
+        ...value
+      }
+    }, {} as T);
+  } 
+
   const wrapPosition = (x: number, y: number) => {
     const mapConfig = getComponentValue(MapConfig, singletonEntity);
     if (!mapConfig) {
@@ -103,6 +129,7 @@ export function createSystemCalls(
     spawn,
     throwBall,
     fleeEncounter,
+    ...combineGribiModuleCalls(Modules),
   };
 }
 

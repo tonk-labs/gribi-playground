@@ -15,6 +15,11 @@ contract GribiSystem is System {
         threads[0] = BaseThread(new Loot());
         gribi.registerThreads(threads);
     }
+
+    //TODO two options for public inputs are...
+    //1) have things in public tree, use channel to sync state between MUD and Gribi
+    //2) pass along keys for MUD public values and fetch them from special Gribi:namespace table
+
     function call(uint256 id, bytes calldata data) public {
         Gribi gribi = Gribi(GribiConfig.get());
         //find the module

@@ -1,4 +1,4 @@
-import { Vault, NetworkCall, Forest, Utils, Gribi, KernelCircuit, PrivateEntry, PublicInput, Operation, Proof, Transaction } from 'gribi-js';
+import { Vault, NetworkCall, Forest, Module, Utils, Gribi, KernelCircuit, PrivateEntry, PublicInput, Operation, Proof, Transaction } from 'gribi-js';
 import ClaimLoot from '../circuits/claimLoot/target/claimLoot.json';
 import RevealLoot from '../circuits/revealLoot/target/revealLoot.json';
 

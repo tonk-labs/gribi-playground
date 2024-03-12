@@ -13,16 +13,16 @@ export async function setup() {
   const network = await setupNetwork();
   const components = createClientComponents(network);
   const systemCalls = createSystemCalls(network, components);
-  const getAddress = () => {
+  systemCalls.registerModules();
+  const getWalletAddress = () => {
     return network.walletClient.account.address;
   };
-  const vault = createSecrets(getAddress);
-  systemCalls.registerModules();
+  const vault = createSecrets(getWalletAddress);
 
   return {
     vault,
     network,
     components,
-    systemCalls,
+    systemCalls
   };
 }
