@@ -98,11 +98,29 @@ export function createModuleCalls(call: NetworkCall) {
     }
 
 
+    const claimTreasure = async (publicRandomness: PublicInput, boxKey: BoxEntry) => {
+        const joinedRandomness = await Utils.pedersenHash([BigInt(publicRandomness.value), BigInt(boxKey.value.randomness)]); //we just take lower bits
+        //determine the index into the tresure array
+        const treasureItemIndex = 20;
+        const salt = Math.random() * 10000000000;
+        const commitment = Utils.pedersenHash([BigInt(treasureItemIndex), joinedRandomness, BigInt(salt)]);
+        const treasure = {
+            __id: String(commitment),
+            commitment: commitment,
+            //TODO:
+            slot: 2, //player might have lots of secret treasure, so you kind of wanna "update a data structure" not just outright overwrite it
+            value: {
+                joinedRandomness,
+                salt,
+                treasureItemIndex
+            }
+        };
+    }
 
 
     //TODO:
     //public randomness needs to be in public tree, treasureItems 
-    const claimTreasure = async (publicRandomness: number, boxKey: BoxEntry): Promise<OperationPackage[]> => {
+    // const claimTreasure = async (publicRandomness: number, boxKey: BoxEntry): Promise<OperationPackage[]> => {
         // const joinedRandomness = Utils.pedersenHash([publicRandomness, boxKey.value.randomness]); //we just take lower bits
         // //determine the index into the tresure array
         // const treasureItemIndex = 20;
