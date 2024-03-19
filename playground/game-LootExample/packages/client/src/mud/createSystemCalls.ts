@@ -7,7 +7,7 @@ import { Module, NetworkCall, Transaction } from "gribi-js";
 export type SystemCalls = ReturnType<typeof createSystemCalls>;
 
 import Modules from "../gribi";
-
+ 
 export function createSystemCalls(
   { playerEntity, worldContract, waitForTransaction }: SetupNetworkResult,
   { Encounter, MapConfig, MonsterCatchAttempt, Obstruction, Player, Position }: ClientComponents
@@ -16,16 +16,16 @@ export function createSystemCalls(
    * GRIBI Stuff
    */
   const registerModules = async () => {
-    const tx = await worldContract.write.registerModules(['0xa5711A30cC5b64c16D98e1D0E5e2bAA04e1F2BCb']);
+    const tx = await worldContract.write.registerModules();
     await waitForTransaction(tx);
   }
 
   const mudCall: NetworkCall = async (transaction: Transaction) => {
     let tx;
     if (transaction.proof) {
-      tx = await worldContract.write.execute([transaction.id, transaction.data, transaction.proof]);
+      tx = await worldContract.write.call(transaction.id, transaction.data);
     } else {
-      tx = await worldContract.write.execute([transaction.id, transaction.data]);
+      tx = await worldContract.write.call(transaction.id, transaction.data, transaction.proof);
     }
     await waitForTransaction(tx);
   };
@@ -38,10 +38,6 @@ export function createSystemCalls(
       }
     }, {} as T);
   } 
-
-  /**
-   * Here's the rest of your SystemCall Code 
-   */
 
   const wrapPosition = (x: number, y: number) => {
     const mapConfig = getComponentValue(MapConfig, singletonEntity);

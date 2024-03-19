@@ -1,10 +1,10 @@
 import { Module } from 'gribi-js';
-import * as _Loot from './Loot';
+import * as _Example from './Example';
 
-const Loot: Module<_Loot.ModuleCalls> = _Loot; 
+const Example: Module<_Example.ModuleCalls> = _Example; 
 
 const Modules = [
-    Loot
+    Example
 ];
 
 export default Modules;

@@ -8,19 +8,13 @@ import { Operation, PublicInput, Proof, Transaction } from "@gribi/src/Structs.s
 import { BaseThread } from "@gribi/src/BaseThread.sol";
 import { Forest } from "@gribi/src/Forest.sol";
 
-import { Example } from "../gribi/Example.sol"; 
-
+import { Loot } from "../gribi/Loot.sol"; 
 
 contract GribiSystem is System {
-    event Log(string message);
-    event LogBytes(bytes data);
-
-    function registerModules(address gribiAddress) public {
-        Gribi gribi = Gribi(gribiAddress);
+    function registerModules() public {
+        Gribi gribi = Gribi(GribiConfig.get());
         BaseThread[] memory threads = new BaseThread[](1);
-
-        //TODO: Register your module here
-        threads[0] = new Example();
+        threads[0] = BaseThread(new Loot());
         gribi.registerThreads(threads);
     }
 
@@ -28,16 +22,16 @@ contract GribiSystem is System {
     //1) have things in public tree, use channel to sync state between MUD and Gribi
     //2) pass along keys for MUD public values and fetch them from special Gribi:namespace table
 
-    function execute(uint256 id, bytes memory data) public {
-        Gribi gribi = Gribi(address(GribiConfig.get()));
+    function call(uint256 id, bytes calldata data) public {
+        Gribi gribi = Gribi(GribiConfig.get());
         //find the module
         BaseThread thread = gribi.getThread(id);
 
         //if the proof passes, shuffle along the inputs and ops to the function of the module
-        // address(thread).call(data);
+        address(thread).call(data);
     }
-    function execute(uint256 id, bytes memory data, Proof memory proof) public {
-        Gribi gribi = Gribi(address(GribiConfig.get()));
+    function call(uint256 id, bytes calldata data, Proof calldata proof) public {
+        Gribi gribi = Gribi(GribiConfig.get());
         //find the module
         BaseThread thread = gribi.getThread(id);
 

@@ -5,9 +5,11 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { TerrainType } from "../src/codegen/common.sol";
 import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
-import { EncounterTrigger, MapConfig, GribiConfig, Obstruction, Position } from "../src/codegen/index.sol";
+import { EncounterTrigger, MapConfig, Obstruction, Position } from "../src/codegen/index.sol";
 import { positionToEntityKey } from "../src/positionToEntityKey.sol";
 
+import { GribiSetup } from "./GribiSetup.s.sol";
+ 
 contract PostDeploy is Script {
   function run(address worldAddress) external {
     console.log("Deployed world: ", worldAddress);
@@ -66,12 +68,7 @@ contract PostDeploy is Script {
     }
  
     MapConfig.set(width, height, terrain);
-    
-    //SETUP GRIBI
-    //add gribi contract to the config
-
-    // GribiConfig.set(address(0xa2611763B1F60a755E38B7851622206d348011C3));
-    GribiConfig.set(address(0xa5711A30cC5b64c16D98e1D0E5e2bAA04e1F2BCb));
+    GribiSetup.run();
  
     vm.stopBroadcast();
   }

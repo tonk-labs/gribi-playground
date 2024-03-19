@@ -1,8 +1,8 @@
 const { createWalletClient, toHex, concatHex, getCreate2Address, parseAbi, http, padHex, encodeDeployData, size, keccak256 } = require("viem");
 const { privateKeyToAccount } = require("viem/accounts");
 const { getBytecode } = require("viem/actions");
-
 const gribiBuild = require("gribi-contracts/out/Gribi.sol/Gribi.json");
+
 const deployment = require("./create2/deployment.json");
 
 const deployer = `0x${deployment.address}`;
@@ -26,13 +26,13 @@ async function deployGribi() {
 
     const gribiBytecode = encodeDeployData({
         bytecode: gribiBuild.bytecode.object,
-        abi: parseAbi(["constructor()"]),
-        // abi: parseAbi(["constructor(bytes32)"]),
-        // args: [keccak256(toHex("1.0"))]
-        args: []
+        abi: parseAbi(["constructor(bytes32)"]),
+        args: [keccak256(toHex("1.0"))]
     });
 
-    const address = getCreate2Address({ from: deployer, salt, bytecode: gribiBytecode }); // Ensure getCreate2Address is defined or imported
+    const gribiBytecodeSize = size(gribiBuild.deployedBytecode.object);
+
+    const address = getCreate2Address({ from: deployer, salt, gribiBytecode }); // Ensure getCreate2Address is defined or imported
 
     const contractCode = await getBytecode(client, { address, blockTag: "pending" });
     if (contractCode) {

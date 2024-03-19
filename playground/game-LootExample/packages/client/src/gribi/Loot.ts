@@ -202,25 +202,9 @@ export function createModuleCalls(call: NetworkCall) {
         // )
     }
 
-    const test = async () => {
-        const data = [{
-            opid: 0,
-            value: 1,
-        }];
-
-        const tx = await Gribi.createGribiTx(
-            TREASURE_ID,
-            "test",
-            [],
-            data
-        );
-        await call(tx);
-    }
-
     return {
-        test
-        // openTreasureBox,
-        // claimTreasure,
-        // revealTreasure
+        openTreasureBox,
+        claimTreasure,
+        revealTreasure
     }
 }

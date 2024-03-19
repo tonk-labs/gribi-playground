@@ -11,7 +11,7 @@
     "deploy:local": "pnpm run build && mud deploy",
     "deploy:testnet": "pnpm run build && mud deploy --profile=lattice-testnet",
     "deploy:gribi": "node ./deployGribi.js",
-    "dev": "pnpm mud dev-contracts",
+    "dev": "pnpm mud dev-contracts && pnpm run deploy:gribi",
     "lint": "pnpm run prettier && pnpm run solhint",
     "prettier": "prettier --write 'src/**/*.sol'",
     "solhint": "solhint --config ./.solhint.json 'src/**/*.sol' --fix",
@@ -19,12 +19,10 @@
   },
   "dependencies": {
     "@latticexyz/cli": "2.0.0-next.16",
-    "@latticexyz/common": "2.0.0-next.16",
     "@latticexyz/schema-type": "2.0.0-next.16",
     "@latticexyz/store": "2.0.0-next.16",
     "@latticexyz/world": "2.0.0-next.16",
-    "@latticexyz/world-modules": "2.0.0-next.16",
-    "viem": "^2.8.13"
+    "@latticexyz/world-modules": "2.0.0-next.16"
   },
   "devDependencies": {
     "@types/node": "^18.15.11",
@@ -37,3 +35,4 @@
     "solhint-plugin-mud": "2.0.0-next.16"
   }
 }
+
