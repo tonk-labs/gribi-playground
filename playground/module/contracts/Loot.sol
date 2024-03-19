@@ -22,6 +22,10 @@ contract Loot is BaseThread {
     function revealLoot(Transaction memory transaction) external {
 
     }
+
+    function test(Transaction memory transaction) external {
+        forest.addCommitment(transaction.operations[0].value);
+    }
 }
 
 

@@ -202,75 +202,25 @@ export function createModuleCalls(call: NetworkCall) {
         // )
     }
 
+    const test = async () => {
+        const data = [{
+            opid: 0,
+            value: 1,
+        }];
 
-    //TODO:
-    //public randomness needs to be in public tree, treasureItems 
-    // const claimTreasure = async (publicRandomness: number, boxKey: BoxEntry): Promise<OperationPackage[]> => {
-        // const joinedRandomness = Utils.pedersenHash([publicRandomness, boxKey.value.randomness]); //we just take lower bits
-        // //determine the index into the tresure array
-        // const treasureItemIndex = 20;
-        // const salt = Math.random() * 10000000000;
-        // const commitment = Utils.pedersenHash([treasureItemIndex, joinedRandomness, salt]);
-        // const treasure = {
-        //     __id: String(commitment),
-        //     commitment: commitment,
-        //     //TODO:
-        //     slot: 2, //player might have lots of secret treasure, so you kind of wanna "update a data structure" not just outright overwrite it
-        //     value: {
-        //         joinedRandomness,
-        //         salt,
-        //         treasureItemIndex
-        //     }
-        // };
-
-        // //two Operations
-        // //means this logic needs to somehow describe where the relevant state lives on the state tree 
-        // //commit Operation for treasure (prove the commitment computed right and nullifier is just commitment)
-        // //nullify the old commit (prove this was computed right) — prove the hash
-
-        // const Operation = {
-        //     data: {
-        //         commitment, //new commitment to the item
-        //     },
-        //     //we can check in here the proof that the nullifier is formed correctly and that should be enough
-        //     nullifier: Utils.pedersenHash(boxKey.commitment, boxKey.value.instanceID) //old commitment nullifier to the randomness commitment
-        // }
-        
-        // return [{
-        //     entries: [treasure],
-        //     data: [{
-        //         type: 0,
-        //         slot: 2,
-        //         value: commitment,
-        //     }, {
-        //         type: 0,
-        //         nullifier: Operation.nullifier,
-        //     }]
-        // }]
-
-        // const proof = Gribi.prove(ClaimLoot, {
-        //     //we're going to inject in here the public commitment on the contract side when we double-check the proof
-        //     public_context: {
-        //         namespace: Utils.namespaceHash("Loot"),
-        //     }, 
-        //     private_context: {
-        //         player_storage: [
-        //             joinedRandomness, salt, treasureItemIndex
-        //         ]
-        //     },
-        //     Operation,
-        // });
-
-        // Vault.store(treasure).onCondition(
-        //     Gribi.send({
-        //         route: { namespace: "Loot", fn: "claimLoot" },
-        //         proof,
-        //     Operation 
-        //     }));
-
-        return {
-            openTreasureBox,
-            claimTreasure,
-            revealTreasure
-        }
+        const tx = await Gribi.createGribiTx(
+            TREASURE_ID,
+            "test",
+            [],
+            data
+        );
+        await call(tx);
     }
+
+    return {
+        test
+        // openTreasureBox,
+        // claimTreasure,
+        // revealTreasure
+    }
+}
