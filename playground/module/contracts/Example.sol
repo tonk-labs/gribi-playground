@@ -28,13 +28,4 @@ contract Example is BaseThread {
 
         forest.setReturnValue(0, secret);
     }
-
-    //These are mostly for testing, you'd want to be more careful about what could be read or written through the module contract
-    function writePublicInput(PublicInput memory input) external {
-        forest.setPublicState(input);
-    }
-
-    function getPublicInput(uint256 slot) external view returns (PublicInput memory) {
-        return forest.getPublicState(slot);
-    }
 }
