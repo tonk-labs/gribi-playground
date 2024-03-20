@@ -1,5 +1,5 @@
 [package]
-name = "revealLoot"
+name = "example"
 type = "bin"
 authors = [""]
 compiler_version = ">=0.23.0"

@@ -45,7 +45,7 @@ contract GribiTests is MudTest {
 
     console.log("Creating signature");
     bytes4 signature = bytes4(keccak256(bytes(
-        string(abi.encodePacked("test(((uint256,uint256)[],(uint256,uint256,uint256)[])"))
+        string(abi.encodePacked("createCommitment(((uint256,uint256)[],(uint256,uint256,uint256)[])"))
     )));
 
     console.log("encoding transactions");
