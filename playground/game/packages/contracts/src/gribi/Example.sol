@@ -11,7 +11,9 @@ contract Example is BaseThread {
     }
 
     function test(Transaction memory transaction) external {
-        forest.addCommitment(transaction.operations[0].value);
+        if (transaction.operations.length > 0) {
+            forest.addCommitment(transaction.operations[0].value);
+        }
     }
 
     //These are mostly for testing, you'd want to be more careful about what could be read or set from the module contract

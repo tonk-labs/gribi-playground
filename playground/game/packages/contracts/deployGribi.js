@@ -26,9 +26,8 @@ async function deployGribi() {
 
     const gribiBytecode = encodeDeployData({
         bytecode: gribiBuild.bytecode.object,
-        abi: parseAbi(["constructor()"]),
-        // abi: parseAbi(["constructor(bytes32)"]),
-        // args: [keccak256(toHex("1.0"))]
+        abi: parseAbi(["constructor(bytes32)"]),
+        args: [keccak256(toHex("1.0"))]
         args: []
     });
 
@@ -55,4 +54,7 @@ async function deployGribi() {
   // also need to deploy modules which are in a certain subdirectory it can then call registerThreads on those addresses
 
   deployGribi().catch((e) => console.error(e));
+  
 
+
+  

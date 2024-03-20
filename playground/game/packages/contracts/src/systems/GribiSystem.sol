@@ -15,6 +15,10 @@ contract GribiSystem is System {
     event Log(string message);
     event LogBytes(bytes data);
 
+    function setGribiAddress(address gribiAddress) public {
+        GribiConfig.set(gribiAddress);
+    }
+
     function registerModules(address gribiAddress) public {
         Gribi gribi = Gribi(gribiAddress);
         BaseThread[] memory threads = new BaseThread[](1);
@@ -34,7 +38,7 @@ contract GribiSystem is System {
         BaseThread thread = gribi.getThread(id);
 
         //if the proof passes, shuffle along the inputs and ops to the function of the module
-        // address(thread).call(data);
+        address(thread).call(data);
     }
     function execute(uint256 id, bytes memory data, Proof memory proof) public {
         Gribi gribi = Gribi(address(GribiConfig.get()));
