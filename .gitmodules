@@ -1,0 +1,3 @@
+[submodule "gribi"]
+	path = gribi
+	url = git@github.com:tonk-gg/gribi.git

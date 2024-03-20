@@ -5,4 +5,8 @@ procs:
   client:
     cwd: packages/client
     shell: pnpm run dev
+  gribi:
+    cwd: packages/contracts
+    shell: sleep 1 && pnpm run deploy:gribi
+    autostart: true
 

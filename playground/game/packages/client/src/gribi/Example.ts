@@ -8,8 +8,8 @@ const MODULE_ID = BigInt(keccak256(toHex("example-module")));
 export type ModuleCalls = ReturnType<typeof createModuleCalls>;
 
 type ExampleValue = {
-    salt: Field,
-    secret: Field 
+    salt: string,
+    secret: string 
 }
 
 interface ExampleCommitmentEntry extends PrivateEntry {
@@ -25,8 +25,8 @@ export function createModuleCalls(call: NetworkCall) {
             commitment,
             slot: 1,
             value: {
-                salt,
-                secret 
+                salt: salt.toString(),
+                secret: salt.toString() 
             },
         }
 
@@ -55,13 +55,13 @@ export function createModuleCalls(call: NetworkCall) {
             "revealCommitment",
             [{
                 slot: 0,
-                value: exampleEntry.commitment
+                value: BigInt(exampleEntry.commitment)
             }, {
                 slot: 0,
-                value: exampleEntry.value.salt
+                value: BigInt(exampleEntry.value.salt)
             }, {
                 slot: 0,
-                value: exampleEntry.value.secret
+                value: BigInt(exampleEntry.value.secret)
             }],
             [Utils.EmptyOp()],
         );

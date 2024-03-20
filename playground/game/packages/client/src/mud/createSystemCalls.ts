@@ -16,7 +16,7 @@ export function createSystemCalls(
    * GRIBI Stuff
    */
   const registerModules = async () => {
-    const tx = await worldContract.write.registerModules(['0x55cE8ffE59063B0690E62d67B1C4a784B54B3191']);
+    const tx = await worldContract.write.registerModules(['0x5424592c50E08DF0023b3ffFdb396670643274CE']);
     await waitForTransaction(tx);
   }
 
