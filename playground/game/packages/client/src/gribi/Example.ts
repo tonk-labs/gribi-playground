@@ -7,8 +7,18 @@ const MODULE_ID = BigInt(keccak256(toHex("example-module")));
 
 export type ModuleCalls = ReturnType<typeof createModuleCalls>;
 
+type Field = BigInt | number | undefined;
+type ExampleValue = {
+    commitment: Field,
+    salt: Field,
+    randomness: Field
+}
+interface ExampleCommitmentEntry extends PrivateEntry {
+    value: 
+}
+
 export function createModuleCalls(call: NetworkCall) {
-    const test = async () => {
+    const createCommitment = async () => {
         const ops = [{
             opid: 0,
             value: 1,
@@ -27,4 +37,6 @@ export function createModuleCalls(call: NetworkCall) {
     return {
         test
     }
+
+    const 
 }
