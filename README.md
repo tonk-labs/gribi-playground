@@ -54,3 +54,8 @@ cd playground
 pnpm install
 pnpm run dev
 ```
+
+
+### Cursed Diagram
+
+![diagram of gribi arch](gribi-explainer-diagram.png)
