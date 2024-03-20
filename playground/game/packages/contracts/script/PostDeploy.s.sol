@@ -68,11 +68,8 @@ contract PostDeploy is Script {
     MapConfig.set(width, height, terrain);
     
     //SETUP GRIBI
-    //add gribi contract to the config
+    GribiConfig.set(address(0x55cE8ffE59063B0690E62d67B1C4a784B54B3191));
 
-    // GribiConfig.set(address(0xa2611763B1F60a755E38B7851622206d348011C3));
-    // GribiConfig.set(address(0xa5711A30cC5b64c16D98e1D0E5e2bAA04e1F2BCb));
- 
     vm.stopBroadcast();
   }
 }

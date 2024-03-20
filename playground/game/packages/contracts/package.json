@@ -10,7 +10,7 @@
     "build:mud": "rimraf src/codegen && mud tablegen && mud worldgen",
     "deploy:local": "pnpm run build && mud deploy",
     "deploy:testnet": "pnpm run build && mud deploy --profile=lattice-testnet",
-    "deploy:gribi": "node ./deployGribi.js",
+    "deploy:gribi": "node ./script/deployGribi.js",
     "dev": "pnpm mud dev-contracts",
     "lint": "pnpm run prettier && pnpm run solhint",
     "prettier": "prettier --write 'src/**/*.sol'",
@@ -24,7 +24,7 @@
     "@latticexyz/store": "2.0.0-next.16",
     "@latticexyz/world": "2.0.0-next.16",
     "@latticexyz/world-modules": "2.0.0-next.16",
-    "viem": "^2.8.13"
+    "viem": "^1.14.0"
   },
   "devDependencies": {
     "@types/node": "^18.15.11",

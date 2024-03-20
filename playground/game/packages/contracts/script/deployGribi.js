@@ -3,7 +3,7 @@ const { privateKeyToAccount } = require("viem/accounts");
 const { getBytecode } = require("viem/actions");
 
 const gribiBuild = require("gribi-contracts/out/Gribi.sol/Gribi.json");
-const deployment = require("./create2/deployment.json");
+const deployment = require("../create2/deployment.json");
 
 const deployer = `0x${deployment.address}`;
 const salt = padHex("0x", { size: 32 });
@@ -28,7 +28,6 @@ async function deployGribi() {
         bytecode: gribiBuild.bytecode.object,
         abi: parseAbi(["constructor(bytes32)"]),
         args: [keccak256(toHex("1.0"))]
-        args: []
     });
 
     const address = getCreate2Address({ from: deployer, salt, bytecode: gribiBytecode }); // Ensure getCreate2Address is defined or imported

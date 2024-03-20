@@ -15,7 +15,7 @@ export async function setup() {
   const components = createClientComponents(network);
   const systemCalls = createSystemCalls(network, components);
 
-  //gribi stuff
+  //Gribi stuff
   systemCalls.registerModules();
   const getWalletAddress = () => {
     return network.walletClient.account.address;
