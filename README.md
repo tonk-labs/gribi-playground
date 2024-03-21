@@ -32,6 +32,20 @@ pnpm link --global
 cd -
 ```
 
+```
+cd gribi/packages/circuits
+pnpm install
+pnpm build
+cd - 
+cd gribi/packages/gribi-js
+pnpm install
+pnpm build
+pnpm link --global
+cd gribi/pcakages/gribi-mud
+pnpm install
+pnpm link --global
+```
+
 ### Link everything and install 
 ```
 cd playground/game/packages/contracts 
@@ -50,7 +64,7 @@ cd -
 
 ### Run the dev setup 
 ```
-cd playground
+cd playground/game
 pnpm install
 pnpm run dev
 ```
