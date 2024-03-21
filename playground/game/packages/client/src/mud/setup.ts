@@ -1,7 +1,7 @@
 /*
  * This file sets up all the definitions required for a MUD client.
  */
-import { createSecrets } from "gribi-mud";
+// import { createSecrets } from "gribi-mud";
 
 import { createClientComponents } from "./createClientComponents";
 import { createSystemCalls } from "./createSystemCalls";
@@ -9,6 +9,16 @@ import { setupNetwork } from "./setupNetwork";
 
 export type SetupResult = Awaited<ReturnType<typeof setup>>;
 
+import { Vault } from "gribi-js";
+
+export const createSecrets = async (activeAddress: () => string) => {
+  // we have the random commitment + random number
+  // we have the inventory of treasure with the commitment to that treasure item
+  // we have a nullifier & nonce used to eliminate that treasure item
+
+  //Maybe here we could actually use the selectors? Since the entries kind of suck
+  return { ...Vault.getModules(activeAddress()) }
+}
 
 export async function setup() {
   const network = await setupNetwork();
