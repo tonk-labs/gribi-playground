@@ -16,6 +16,7 @@ contract MapSystem is System {
     for (uint i = 0; i < players.length; i++) {
       bytes32 player = addressToEntityKey(players[i]);
       (uint32 playerX, uint32 playerY) = Position.get(player);
+
       if (playerX >= x - 1 && playerX <= x + 1 && playerY >= y - 1 && playerY <= y + 1) {
         // remove player from the map
         Player.set(player, false);

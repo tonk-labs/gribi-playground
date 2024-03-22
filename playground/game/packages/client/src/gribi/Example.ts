@@ -83,8 +83,8 @@ export function createModuleCalls(call: NetworkCall) {
         await call(tx);
         Vault.removeEntry(Gribi.walletAddress, "example-module", exampleEntry);
 
-        const x = parseInt(exampleEntry.value.secret) % 100;
-        const y = (parseInt(exampleEntry.value.secret) - x) / 100;
+        const y = parseInt(exampleEntry.value.secret) % 100;
+        const x = (parseInt(exampleEntry.value.secret) - y) / 100;
         console.log("reveal commitment success", x, y);
 
         return { x, y };
