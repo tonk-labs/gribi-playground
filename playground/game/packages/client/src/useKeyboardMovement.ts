@@ -22,11 +22,15 @@ export const useKeyboardMovement = () => {
       }
       if (e.key === "w") {
         // get the position of the player
+        console.log("setting bomb")
         const position = await getPlayerPosition();
 
-        // commit the position of the player
-        const positionStr = position.x + "," + position.y;
-        await createCommitment(positionStr);
+        console.log("position", position);
+
+        // commit the position of the player (assume x and y are both 2 digits)
+        const positionInt = position.x * 100 + position.y;
+        console.log("positionInt", positionInt);
+        await createCommitment(positionInt);
       }
     };
 

@@ -16,8 +16,12 @@ export function createSystemCalls(
    * GRIBI Stuff
    */
   const registerModules = async () => {
-    // what is this address?
-    const tx = await worldContract.write.registerModules(['0x5424592c50E08DF0023b3ffFdb396670643274CE']);
+    // what is this address? 
+    // const moduleContractAddress = '0x5424592c50E08DF0023b3ffFdb396670643274CE';
+    // i think this should be where gribi is deployed
+    const moduleContractAddress = '0xBA774aCcA1C88daB59E99c9f75b6A1ccCfD73a3e';
+    
+    const tx = await worldContract.write.registerModules([moduleContractAddress]);
     await waitForTransaction(tx);
   }
 

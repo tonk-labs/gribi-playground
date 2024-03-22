@@ -8,6 +8,7 @@ import { singletonEntity } from "@latticexyz/store-sync/recs";
 import { Entity, Has, getComponentValueStrict } from "@latticexyz/recs";
 import { EncounterScreen } from "./EncounterScreen";
 import { MonsterType, monsterTypes } from "./monsterTypes";
+import { Vault, Gribi } from "gribi-js";
  
 export const GameBoard = () => {
   useKeyboardMovement();
@@ -48,6 +49,9 @@ export const GameBoard = () => {
   const encounter = useComponentValue(Encounter, playerEntity);
   const monsterType = useComponentValue(Monster, encounter ? (encounter.monster as Entity) : undefined)?.value;
   const monster = monsterType != null && monsterType in MonsterType ? monsterTypes[monsterType as MonsterType] : null;
+
+  const bomb = Vault.getEntries(Gribi.walletAddress, "example-module");
+  console.log(bomb);
  
   return (
     <GameMap

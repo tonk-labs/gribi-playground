@@ -21,6 +21,8 @@ export function createModuleCalls(call: NetworkCall) {
         const salt = Utils.rng() as bigint; 
         const commitment = keccak256(encodePacked(['uint256','uint256'], [salt, secret as bigint]));
 
+        console.log("commitment", commitment);
+
         const exampleEntry: ExampleCommitmentEntry = {
             commitment,
             slot: 1,
@@ -36,6 +38,8 @@ export function createModuleCalls(call: NetworkCall) {
             nullifier: 0,
         }];
 
+        console.log("ops", ops);
+
         const tx = await Gribi.createGribiTx(
             MODULE_ID,
             "createCommitment",
@@ -43,8 +47,15 @@ export function createModuleCalls(call: NetworkCall) {
            ops
         );
 
+        console.log("gribi tx", tx);
+
+        // TODO: this is failing 
         await call(tx);
+
+        console.log("gribi tx success")
         Vault.setEntry(Gribi.walletAddress, "example-module", exampleEntry);
+
+        console.log("create commitment success")
     }
 
     const revealCommitment = async () => {
