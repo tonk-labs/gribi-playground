@@ -50,8 +50,12 @@ export const GameBoard = () => {
   const monsterType = useComponentValue(Monster, encounter ? (encounter.monster as Entity) : undefined)?.value;
   const monster = monsterType != null && monsterType in MonsterType ? monsterTypes[monsterType as MonsterType] : null;
 
+  // const bomb = Vault.getEntries(Gribi.walletAddress, "example-module");
+  // console.log(bomb);
+  console.log("Gamboard ticked")
   const bomb = Vault.getEntries(Gribi.walletAddress, "example-module");
-  console.log(bomb);
+  console.log("bomb", bomb);
+  
  
   return (
     <GameMap

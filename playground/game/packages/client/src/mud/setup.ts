@@ -25,12 +25,18 @@ export async function setup() {
   const components = createClientComponents(network);
   const systemCalls = createSystemCalls(network, components);
 
+  // clean up vaults from previous runs
+  console.log("Clearing storage from previous runs")
+  Vault.clearStorage();
+  console.log("Storage cleared")
+
   //Gribi stuff
   systemCalls.registerModules();
   const getWalletAddress = () => {
     return network.walletClient.account.address;
   };
   const vault = createSecrets(getWalletAddress);
+  
 
   return {
     vault,
