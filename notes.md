@@ -19,3 +19,27 @@ the trap mechanism is how difficult it is to interact that the trap is there, is
 go ahead and modify the gribi system file directly if you want to shuffle return values back into table instead of doing anything clever there, you 
 
 hit specific logi
+
+typescript game client code needs to have explicit types on each variable to make it more readable
+
+
+this calls into Modules
+playground/game/packages/client/src/mud/createSystemCalls.ts
+the system register modules
+playground/game/packages/client/src/mud/setup.ts
+the game needs to run setup() which registers all the modules before rendering 
+playground/game/packages/client/src/index.tsx
+
+systemCalls somehow is a struct with 
+
+systemCalls sd
+
+1. add 2 keystroke to useKeyboardMovement.ts
+2. make it commit something
+3. make it reveal something 
+4. render the reveal 
+
+
+# TODO
+
+- [ ] add detonate to playground/game/packages/contracts/out/IWorld.sol/IWorld.abi.json.d.ts
