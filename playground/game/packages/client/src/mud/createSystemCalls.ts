@@ -111,6 +111,12 @@ export function createSystemCalls(
     await waitForTransaction(tx);
   };
 
+  const detonate = async (x: number, y: number) => {
+    console.log("sending detonate tx for", x, y)
+    const tx = await worldContract.write.detonate([x, y]);
+    await waitForTransaction(tx);    
+  };  
+
   const getPlayerPosition = async () => {
     if (!playerEntity) {
       throw new Error("no player");
@@ -176,6 +182,7 @@ export function createSystemCalls(
   return {
     registerModules,
     moveBy,
+    detonate,
     getPlayerPosition,
     spawn,
     throwBall,

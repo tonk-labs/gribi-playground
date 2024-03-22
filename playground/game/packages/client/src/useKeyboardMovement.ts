@@ -7,6 +7,7 @@ export const useKeyboardMovement = () => {
       createCommitment,
       revealCommitment,
       moveBy,
+      detonate,
       getPlayerPosition,
     },
   } = useMUD();
@@ -43,8 +44,13 @@ export const useKeyboardMovement = () => {
         // reveal the bomb
 
         console.log("Running revealCommitment");
-        await revealCommitment();
+        const {x, y} = await revealCommitment();
         console.log("revealCommitment done");
+
+        // detonate the bomb
+        console.log("detonating bomb at ", x, y);
+        await detonate(x, y);
+
         moveBy(0, 0);
       }
     };

@@ -9,7 +9,7 @@ export type ModuleCalls = ReturnType<typeof createModuleCalls>;
 
 type ExampleValue = {
     salt: string,
-    secret: string 
+    secret: string
 }
 
 interface ExampleCommitmentEntry extends PrivateEntry {
@@ -18,8 +18,8 @@ interface ExampleCommitmentEntry extends PrivateEntry {
 
 export function createModuleCalls(call: NetworkCall) {
     const createCommitment = async (secret: Field) => {
-        const salt = Utils.rng() as bigint; 
-        const commitment = keccak256(encodePacked(['uint256','uint256'], [salt, secret as bigint]));
+        const salt = Utils.rng() as bigint;
+        const commitment = keccak256(encodePacked(['uint256', 'uint256'], [salt, secret as bigint]));
 
         console.log("commitment", commitment);
 
@@ -28,7 +28,7 @@ export function createModuleCalls(call: NetworkCall) {
             slot: 1,
             value: {
                 salt: salt.toString(),
-                secret: secret.toString() 
+                secret: secret.toString()
             },
         }
 
@@ -44,7 +44,7 @@ export function createModuleCalls(call: NetworkCall) {
             MODULE_ID,
             "createCommitment",
             [Utils.EmptyInput()],
-           ops
+            ops
         );
 
         console.log("gribi tx", tx);
@@ -58,7 +58,7 @@ export function createModuleCalls(call: NetworkCall) {
         console.log("create commitment success")
     }
 
-    const revealCommitment = async () => {
+    const revealCommitment = async (): Promise<{ x: number, y: number }> => {
         const exampleEntry = Vault.getDataAtSlot(Gribi.walletAddress, "example-module", 1)!;
 
         const tx = await Gribi.createGribiTx(
@@ -77,8 +77,17 @@ export function createModuleCalls(call: NetworkCall) {
             [Utils.EmptyOp()],
         );
 
+        console.log("reveal tx", tx);
+        console.log("reveal tx vault entry", exampleEntry)
+
         await call(tx);
         Vault.removeEntry(Gribi.walletAddress, "example-module", exampleEntry);
+
+        const x = parseInt(exampleEntry.value.secret) % 100;
+        const y = (parseInt(exampleEntry.value.secret) - x) / 100;
+        console.log("reveal commitment success", x, y);
+
+        return { x, y };
     }
 
     return {
