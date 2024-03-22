@@ -3,11 +3,11 @@ import { useMUD } from "./MUDContext";
 
 export const useKeyboardMovement = () => {
   const {
-    systemCalls: { moveBy },
+    systemCalls: { createCommitment, moveBy, getPlayerPosition },
   } = useMUD();
 
   useEffect(() => {
-    const listener = (e: KeyboardEvent) => {
+    const listener = async (e: KeyboardEvent) => {
       if (e.key === "ArrowUp") {
         moveBy(0, -1);
       }
@@ -19,6 +19,14 @@ export const useKeyboardMovement = () => {
       }
       if (e.key === "ArrowRight") {
         moveBy(1, 0);
+      }
+      if (e.key === "w") {
+        // get the position of the player
+        const position = await getPlayerPosition();
+
+        // commit the position of the player
+        const positionStr = position.x + "," + position.y;
+        await createCommitment(positionStr);
       }
     };
 

@@ -16,6 +16,7 @@ export function createSystemCalls(
    * GRIBI Stuff
    */
   const registerModules = async () => {
+    // what is this address?
     const tx = await worldContract.write.registerModules(['0x5424592c50E08DF0023b3ffFdb396670643274CE']);
     await waitForTransaction(tx);
   }
@@ -78,6 +79,19 @@ export function createSystemCalls(
     const tx = await worldContract.write.moveBy([playerPosition.x, playerPosition.y, deltaX, deltaY]);
     await waitForTransaction(tx);
   };
+
+  const getPlayerPosition = async () => {
+    if (!playerEntity) {
+      throw new Error("no player");
+    }
+ 
+    const position = getComponentValue(Position, playerEntity);
+    if (!position) {
+      throw new Error("no position found");
+    }
+ 
+    return position;
+  };
  
   const spawn = async (x: number, y: number) => {
     if (!playerEntity) {
@@ -127,9 +141,11 @@ export function createSystemCalls(
     await waitForTransaction(tx);
   };
  
+  // what is this struct
   return {
     registerModules,
     moveBy,
+    getPlayerPosition,
     spawn,
     throwBall,
     fleeEncounter,
