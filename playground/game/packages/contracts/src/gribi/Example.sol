@@ -12,7 +12,16 @@ contract Example is BaseThread {
 
     function createCommitment(Transaction memory transaction) external {
         if (transaction.operations.length > 0) {
+            require(!forest.nullifierExists(transaction.operations[0].value), "This commitment has been nullified");
             forest.addCommitment(transaction.operations[0].value);
+        }
+    }
+
+    function updateCommitment(Transaction memory transaction) external {
+        if (transaction.operations.length > 0) {
+            require(!forest.nullifierExists(transaction.operations[0].value), "This commitment has been nullified");
+            forest.addCommitment(transaction.operations[0].value);
+            forest.addNullifier(transaction.operations[0].nullifier);
         }
     }
 
@@ -26,7 +35,8 @@ contract Example is BaseThread {
         uint256 hash = uint256(keccak256(abi.encodePacked([salt, secret])));
         require(hash == commitment, "The revealed commitment is incorrect");
 
-        forest.setReturnValue(0, secret);
+        forest.setReturnValue(0, 1);
+        forest.setReturnValue(1, secret);
     }
 
 }

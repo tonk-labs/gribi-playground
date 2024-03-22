@@ -12,7 +12,16 @@ contract Example is BaseThread {
 
     function createCommitment(Transaction memory transaction) external {
         if (transaction.operations.length > 0) {
+            require(!forest.nullifierExists(transaction.operations[0].value), "This commitment has been nullified");
             forest.addCommitment(transaction.operations[0].value);
+        }
+    }
+
+    function updateCommitment(Transaction memory transaction) external {
+        if (transaction.operations.length > 0) {
+            require(!forest.nullifierExists(transaction.operations[0].value), "This commitment has been nullified");
+            forest.addCommitment(transaction.operations[0].value);
+            forest.addNullifier(transaction.operations[0].nullifier);
         }
     }
 

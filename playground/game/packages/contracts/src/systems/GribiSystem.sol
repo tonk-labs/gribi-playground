@@ -28,17 +28,31 @@ contract GribiSystem is System {
         gribi.registerThreads(threads);
     }
 
+    function handleReturnValues(BaseThread thread) private {
+        uint256 returnCode = thread.getReturnValue(0);
+        bytes32 player = addressToEntityKey(address(_msgSender()));
+        
+        // this is revealCommitment
+        if (returnCode == 1) {
+            //set the MUD table here for player key
+        }
+        
+        // If I need to use some return value I can add it here
+    }
+
     //TODO two options for public inputs are...
     //1) have things in public tree, use channel to sync state between MUD and Gribi
     //2) pass along keys for MUD public values and fetch them from special Gribi:namespace table
 
     function execute(uint256 id, bytes memory data) public {
         Gribi gribi = Gribi(address(GribiConfig.get()));
+
         //find the module
         BaseThread thread = gribi.getThread(id);
 
         //if the proof passes, shuffle along the inputs and ops to the function of the module
         address(thread).call(data);
+        handleReturnValues(thread);
     }
     function execute(uint256 id, bytes memory data, Proof memory proof) public {
         Gribi gribi = Gribi(address(GribiConfig.get()));
