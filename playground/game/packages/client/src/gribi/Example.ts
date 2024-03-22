@@ -28,7 +28,7 @@ export function createModuleCalls(call: NetworkCall) {
             slot: 1,
             value: {
                 salt: salt.toString(),
-                secret: salt.toString() 
+                secret: secret.toString() 
             },
         }
 
