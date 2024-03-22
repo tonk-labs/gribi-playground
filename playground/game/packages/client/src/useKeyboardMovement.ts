@@ -3,7 +3,7 @@ import { useMUD } from "./MUDContext";
 
 export const useKeyboardMovement = () => {
   const {
-    systemCalls: { createCommitment, moveBy, getPlayerPosition },
+    systemCalls: { createCommitment, revealCommitment, moveBy, getPlayerPosition,  },
   } = useMUD();
 
   useEffect(() => {
@@ -31,6 +31,14 @@ export const useKeyboardMovement = () => {
         const positionInt = position.x * 100 + position.y;
         console.log("positionInt", positionInt);
         await createCommitment(positionInt);
+      }
+      if (e.key === "e") {
+        console.log("reveal bomb")
+        // reveal the bomb
+
+        console.log("Running revealCommitment")
+        await revealCommitment();
+        console.log("revealCommitment done")
       }
     };
 
