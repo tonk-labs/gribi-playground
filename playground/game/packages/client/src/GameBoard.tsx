@@ -9,18 +9,18 @@ import { Entity, Has, getComponentValueStrict } from "@latticexyz/recs";
 import { EncounterScreen } from "./EncounterScreen";
 import { MonsterType, monsterTypes } from "./monsterTypes";
 import { Vault, Gribi } from "gribi-js";
- 
+
 export const GameBoard = () => {
   useKeyboardMovement();
- 
+
   const {
     components: { Encounter, MapConfig, Monster, Player, Position },
     network: { playerEntity },
     systemCalls: { spawn },
   } = useMUD();
- 
+
   const canSpawn = useComponentValue(Player, playerEntity)?.value !== true;
- 
+
   const players = useEntityQuery([Has(Player), Has(Position)]).map((entity) => {
     const position = getComponentValueStrict(Position, entity);
     return {
@@ -30,33 +30,52 @@ export const GameBoard = () => {
       emoji: entity === playerEntity ? "🤠" : "🥸",
     };
   });
- 
+
   const mapConfig = useComponentValue(MapConfig, singletonEntity);
   if (mapConfig == null) {
-    throw new Error("map config not set or not ready, only use this hook after loading state === LIVE");
+    throw new Error(
+      "map config not set or not ready, only use this hook after loading state === LIVE"
+    );
   }
- 
+
   const { width, height, terrain: terrainData } = mapConfig;
   const terrain = Array.from(hexToArray(terrainData)).map((value, index) => {
-    const { emoji } = value in TerrainType ? terrainTypes[value as TerrainType] : { emoji: "" };
+    const { emoji } =
+      value in TerrainType ? terrainTypes[value as TerrainType] : { emoji: "" };
     return {
       x: index % width,
       y: Math.floor(index / width),
       emoji,
     };
   });
- 
+
   const encounter = useComponentValue(Encounter, playerEntity);
-  const monsterType = useComponentValue(Monster, encounter ? (encounter.monster as Entity) : undefined)?.value;
-  const monster = monsterType != null && monsterType in MonsterType ? monsterTypes[monsterType as MonsterType] : null;
+  const monsterType = useComponentValue(
+    Monster,
+    encounter ? (encounter.monster as Entity) : undefined
+  )?.value;
+  const monster =
+    monsterType != null && monsterType in MonsterType
+      ? monsterTypes[monsterType as MonsterType]
+      : null;
 
   // const bomb = Vault.getEntries(Gribi.walletAddress, "example-module");
   // console.log(bomb);
-  console.log("Gamboard ticked")
+  console.log("Gamboard ticked");
   const bomb = Vault.getEntries(Gribi.walletAddress, "example-module");
   console.log("bomb", bomb);
-  
- 
+
+  const bombs = bomb.map((entry: { value: any }) => {
+    const pos = parseInt(entry.value.secret, 10);
+    const y = pos % 100;
+    const x = (pos - y) / 100;
+    return {
+      x,
+      y,
+      emoji: "💣",
+    };
+  });
+
   return (
     <GameMap
       width={width}
@@ -64,12 +83,15 @@ export const GameBoard = () => {
       terrain={terrain}
       onTileClick={canSpawn ? spawn : undefined}
       players={players}
+      bombs={bombs}
       encounter={
         encounter ? (
-          <EncounterScreen monsterName={monster?.name ?? "MissingNo"} monsterEmoji={monster?.emoji ?? "💱"} />
+          <EncounterScreen
+            monsterName={monster?.name ?? "MissingNo"}
+            monsterEmoji={monster?.emoji ?? "💱"}
+          />
         ) : undefined
       }
     />
   );
 };
-

@@ -12,6 +12,11 @@ type Props = {
     y: number;
     emoji: string;
   }[];
+  bombs?: {
+    x: number;
+    y: number;
+    emoji: string;
+  }[];
   players?: {
     x: number;
     y: number;
@@ -28,10 +33,11 @@ export const GameMap = ({
   terrain,
   players,
   encounter,
+  bombs,
 }: Props) => {
   const {
     network: { playerEntity },
-    systemCalls: { createCommitment } 
+    systemCalls: { createCommitment },
   } = useMUD();
 
   const rows = new Array(width).fill(0).map((_, i) => i);
@@ -57,6 +63,8 @@ export const GameMap = ({
           const mainPlayerHere = playersHere?.find(
             (p) => p.entity === playerEntity
           );
+
+          const bombEmoji = bombs?.find((b) => b.x === x && b.y === y)?.emoji;
 
           return (
             <div
@@ -90,6 +98,11 @@ export const GameMap = ({
                     {terrainEmoji}
                   </div>
                 ) : null}
+                {bombEmoji ? (
+                  <div className="absolute inset-0 flex items-center justify-center text-2xl pointer-events-none">
+                    {bombEmoji}
+                  </div>
+                ) : null}
                 <div className="relative">
                   {playersHere?.map((p) => (
                     <span key={p.entity}>{p.emoji}</span>
@@ -101,9 +114,17 @@ export const GameMap = ({
         })
       )}
 
-      <div className="w-h h-8 flex items-center justify-center bg-blue-500" style={{ gridColumnStart: width - 1, gridRowStart: height - 1 }}
-        onClick={() => createCommitment(1)}
-        >TEST</div>
+      <div
+        className="w-h h-8 flex items-center justify-center bg-blue-500"
+        style={{ gridColumnStart: width - 1, gridRowStart: height - 1 }}
+        onClick={() => {
+          console.log("TEST");
+          console.log(createCommitment);
+          createCommitment(1);
+        }}
+      >
+        TEST
+      </div>
 
       {encounter && showEncounter ? (
         <div

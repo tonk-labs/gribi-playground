@@ -53,7 +53,7 @@ contract MapSystem is System {
     require(!Encounter.getExists(player), "cannot move during an encounter");
 
     (uint32 fromX, uint32 fromY) = Position.get(player);
-    require(distance2(deltaX, deltaY) == 1, "can only move to adjacent spaces");
+    // require(distance2(deltaX, deltaY) == 1, "can only move to adjacent spaces");
     require(clientX == fromX && clientY == fromY, "client confused about location");
 
     // Constrain position to map size, wrapping around if necessary
