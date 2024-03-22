@@ -43,3 +43,4 @@ systemCalls sd
 # TODO
 
 - [ ] add detonate to playground/game/packages/contracts/out/IWorld.sol/IWorld.abi.json.d.ts
+- [ ] if a player places a bomb (commitment), they need to be see it in the game
