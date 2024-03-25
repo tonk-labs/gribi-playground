@@ -5,7 +5,30 @@ import { BaseThread } from "@gribi/src/BaseThread.sol";
 import { Operation, Transaction, PublicInput } from "@gribi/src/Structs.sol";
 import { Forest } from "@gribi/src/Forest.sol";
 
+abstract contract ReturnValueRegister {
+    uint[] codes;
+}
+
+contract ExampleReturnValues is ReturnValueRegister {
+    enum Codes { CREATE_COMMITMENT }
+    constructor() {
+        codes = new uint[](1);
+        codes[uint(Codes.CREATE_COMMITMENT)] = 0;
+    }
+
+    function parse(uint code, bytes memory data) {
+
+    }
+}
+
 contract Example is BaseThread {
+
+    ReturnValueRegister public register;
+
+    constructor() {
+        register = new ExampleReturnValues();
+    }
+
     function getModuleID() public virtual override returns (uint256) {
         return uint256(keccak256(abi.encodePacked("example-module")));
     }
@@ -38,3 +61,7 @@ contract Example is BaseThread {
         forest.setReturnValue(0, secret);
     }
 }
+
+
+
+

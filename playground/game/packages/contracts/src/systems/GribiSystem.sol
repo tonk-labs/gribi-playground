@@ -5,7 +5,7 @@ import { System } from "@latticexyz/world/src/System.sol";
 import { GribiConfig } from "../codegen/index.sol";
 import { Gribi } from "@gribi/src/Gribi.sol";
 import { Operation, PublicInput, Proof, Transaction } from "@gribi/src/Structs.sol";
-import { BaseThread } from "@gribi/src/BaseThread.sol";
+import { BaseThread, UpdateRegister } from "@gribi/src/BaseThread.sol";
 import { Forest } from "@gribi/src/Forest.sol";
 
 import { Example } from "../gribi/Example.sol"; 
@@ -29,12 +29,14 @@ contract GribiSystem is System {
     }
 
     function handleReturnValues(BaseThread thread) private {
-        uint256 returnCode = thread.getReturnValue(0);
+        // ReturnStack st = thread.getReturnValue(0);
+        UpdateRegister reg = thread.peekUpdates();
         bytes32 player = addressToEntityKey(address(_msgSender()));
-        
+
         // this is revealCommitment
-        if (returnCode == 1) {
+        if (reg.status == Example.Codes.CREATE_COMMITMENT) {
             //set the MUD table here for player key
+            (uint256 x, uint256 y) = abi.decode(reg.value, (uint256, uint256));
         }
         
         // If I need to use some return value I can add it here
