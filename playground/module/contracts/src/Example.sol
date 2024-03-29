@@ -1,36 +1,27 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
 
-import { BaseThread } from "@gribi/src/BaseThread.sol";
-import { Operation, Transaction, PublicInput } from "@gribi/src/Structs.sol";
-import { Forest } from "@gribi/src/Forest.sol";
-
-abstract contract ReturnValueRegister {
-    uint[] codes;
-}
-
-contract ExampleReturnValues is ReturnValueRegister {
-    enum Codes { CREATE_COMMITMENT }
-    constructor() {
-        codes = new uint[](1);
-        codes[uint(Codes.CREATE_COMMITMENT)] = 0;
-    }
-
-    function parse(uint code, bytes memory data) {
-
-    }
-}
+import { BaseThread, UpdateRegister } from "@gribi/evm-rootsystem/BaseThread.sol";
+import { Transaction, Operation, PublicInput } from "@gribi/evm-rootsystem/Structs.sol";
+import { Forest } from "@gribi/evm-rootsystem/Forest.sol";
 
 contract Example is BaseThread {
-
-    ReturnValueRegister public register;
-
+    enum Codes { UNSET, REVEAL_COMMITMENT }
     constructor() {
-        register = new ExampleReturnValues();
+        codes = new uint[](2);
+        codes[uint(Codes.UNSET)] = 0;
+        codes[uint(Codes.REVEAL_COMMITMENT)] = 0;
+        register = UpdateRegister(uint(Codes.UNSET), bytes(""));
     }
 
-    function getModuleID() public virtual override returns (uint256) {
+    function getModuleID() public virtual pure override returns (uint256) {
         return uint256(keccak256(abi.encodePacked("example-module")));
+    }
+
+    function parse(UpdateRegister memory ur) public pure returns (uint256) {
+        if (ur.code == uint(Codes.REVEAL_COMMITMENT)) {
+            return abi.decode(ur.value, (uint256));
+        }
     }
 
     function createCommitment(Transaction memory transaction) external {
@@ -58,10 +49,9 @@ contract Example is BaseThread {
         uint256 hash = uint256(keccak256(abi.encodePacked([salt, secret])));
         require(hash == commitment, "The revealed commitment is incorrect");
 
-        forest.setReturnValue(0, secret);
+        register = UpdateRegister(
+            uint(Codes.REVEAL_COMMITMENT),
+            abi.encode(secret)
+        );
     }
 }
-
-
-
-
