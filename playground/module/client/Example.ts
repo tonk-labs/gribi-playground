@@ -17,13 +17,15 @@ interface ExampleCommitmentEntry extends PrivateEntry {
 }
 
 export function createModuleCalls(call: NetworkCall) {
-    const createCommitment = async (secret: Field) => {
+    // for x,y location this could be hash of x,y combination
+    // we could add arbitrary witnesses argument and allow custom circuits to put into this module
+    const createCommitment = async (secret: Field, slot: number) => {
         const salt = Utils.rng() as bigint; 
         const commitment = keccak256(encodePacked(['uint256','uint256'], [salt, secret as bigint]));
 
         const exampleEntry: ExampleCommitmentEntry = {
             commitment,
-            slot: 1,
+            slot,
             value: {
                 salt: salt.toString(),
                 secret: salt.toString() 
@@ -47,8 +49,38 @@ export function createModuleCalls(call: NetworkCall) {
         Vault.setEntry(Gribi.walletAddress, "example-module", exampleEntry);
     }
 
-    const revealCommitment = async () => {
-        const exampleEntry = Vault.getDataAtSlot(Gribi.walletAddress, "example-module", 1)!;
+    //assume we have a 3rd parameter here that takes a circuit
+    const updateCommitment = async (newSecret: Field, slot: number) => {
+        const salt = Utils.rng() as bigint; 
+        const commitment = keccak256(encodePacked(['uint256','uint256'], [salt, newSecret as bigint]));
+
+        const exampleEntry = Vault.getDataAtSlot(Gribi.walletAddress, "example-module", slot)!;
+        exampleEntry.commitment = commitment;
+
+        // this obviously is going to leak information, but all we care about is that we don't know the location
+        const ops = [{
+            opid: 1,
+            value: commitment,
+            nullifier: exampleEntry.commitment,
+        }]
+
+        const tx = await Gribi.createGribiTx(
+            MODULE_ID,
+            "updateCommitment",
+            [Utils.EmptyInput()],
+            ops
+        );
+
+        await call(tx);
+        Vault.setEntry(Gribi.walletAddress, "example-module", exampleEntry);
+    }
+
+    // here it's tricky, because let's say we had committed to x,y locations
+    // we need to again shuffle the x,y from the reveal back into public space
+    // here we can reveal the hash of the x,y but we also need some way to pass on
+    // the witness data (which, I guess is possible as long as it's a Field element)
+    const revealCommitment = async (slot: number) => {
+        const exampleEntry = Vault.getDataAtSlot(Gribi.walletAddress, "example-module", slot)!;
 
         const tx = await Gribi.createGribiTx(
             MODULE_ID,
