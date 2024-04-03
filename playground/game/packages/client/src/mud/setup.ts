@@ -1,7 +1,7 @@
 /*
  * This file sets up all the definitions required for a MUD client.
  */
-import { createSecrets } from "gribi-mud";
+import { createSecrets } from "@gribi/mud";
 
 import { createClientComponents } from "./createClientComponents";
 import { createSystemCalls } from "./createSystemCalls";

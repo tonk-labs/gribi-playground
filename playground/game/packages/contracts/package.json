@@ -24,6 +24,7 @@
     "@latticexyz/store": "2.0.0-next.16",
     "@latticexyz/world": "2.0.0-next.16",
     "@latticexyz/world-modules": "2.0.0-next.16",
+    "@gribi/evm-rootsystem-contracts": "../../../../gribi/packages/evm-rootsystem/packages/contracts",
     "viem": "^1.14.0"
   },
   "devDependencies": {

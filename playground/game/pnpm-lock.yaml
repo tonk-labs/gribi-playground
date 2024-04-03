@@ -35,6 +35,15 @@ importers:
 
   packages/client:
     dependencies:
+      '@gribi/evm-rootsystem':
+        specifier: ../../../../gribi/packages/evm-rootsystem/packages/client
+        version: link:../../../../gribi/packages/evm-rootsystem/packages/client
+      '@gribi/mud':
+        specifier: ../../../../gribi/packages/mud-integration/packages/client
+        version: link:../../../../gribi/packages/mud-integration/packages/client
+      '@gribi/vault':
+        specifier: ../../../../gribi/packages/vault
+        version: link:../../../../gribi/packages/vault
       '@latticexyz/common':
         specifier: 2.0.0-next.16
         version: 2.0.0-next.16(typescript@5.1.6)(zod@3.22.4)
@@ -74,6 +83,9 @@ importers:
       contracts:
         specifier: workspace:*
         version: link:../contracts
+      example-gribi-module:
+        specifier: ../../../module/client
+        version: link:../../../module/client
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -132,6 +144,9 @@ importers:
 
   packages/contracts:
     dependencies:
+      '@gribi/evm-rootsystem-contracts':
+        specifier: ../../../../gribi/packages/evm-rootsystem/packages/contracts
+        version: link:../../../../gribi/packages/evm-rootsystem/packages/contracts
       '@latticexyz/cli':
         specifier: 2.0.0-next.16
         version: 2.0.0-next.16(google-protobuf@3.21.2)

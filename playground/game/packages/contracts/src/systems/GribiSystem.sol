@@ -3,10 +3,11 @@ pragma solidity ^0.8.4;
 
 import { System } from "@latticexyz/world/src/System.sol";
 import { GribiConfig } from "../codegen/index.sol";
-import { Gribi } from "@gribi/src/Gribi.sol";
-import { Operation, PublicInput, Proof, Transaction } from "@gribi/src/Structs.sol";
-import { BaseThread, UpdateRegister } from "@gribi/src/BaseThread.sol";
-import { Forest } from "@gribi/src/Forest.sol";
+import { Gribi } from "@gribi/evm-rootsystem/Gribi.sol";
+import { Operation, PublicInput, Proof, Transaction } from "@gribi/evm-rootsystem/Structs.sol";
+import { BaseThread, UpdateRegister } from "@gribi/evm-rootsystem/BaseThread.sol";
+import { Forest } from "@gribi/evm-rootsystem/Forest.sol";
+import { addressToEntityKey } from "../addressToEntityKey.sol";
 
 import { Example } from "../gribi/Example.sol"; 
 import { MapSystem } from "./MapSystem.sol";
@@ -35,13 +36,15 @@ contract GribiSystem is System {
 
     function handleReturnValues(BaseThread thread) private {
         // ReturnStack st = thread.getReturnValue(0);
-        UpdateRegister reg = thread.peekUpdates();
+        UpdateRegister memory reg = thread.peekUpdates();
         bytes32 player = addressToEntityKey(address(_msgSender()));
 
+        
+
         // this is revealCommitment
-        if (reg.status == Example.Codes.CREATE_COMMITMENT) {
+        if (reg.code == uint(Example.Codes.REVEAL_COMMITMENT)) {
             //set the MUD table here for player key
-            uint256 secret = abi.decode(reg.value, uint256);
+            uint256 secret = abi.decode(reg.value, (uint256));
 
             //do something with that secret
         }

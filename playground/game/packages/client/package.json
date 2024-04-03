@@ -29,6 +29,10 @@
     "react-toastify": "^9.1.2",
     "rxjs": "7.5.5",
     "tailwind-merge": "^1.11.0",
+    "@gribi/mud": "../../../../gribi/packages/mud-integration/packages/client",
+    "@gribi/evm-rootsystem": "../../../../gribi/packages/evm-rootsystem/packages/client",
+    "@gribi/vault": "../../../../gribi/packages/vault",
+    "example-gribi-module": "../../../module/client",
     "viem": "^1.14.0"
   },
   "devDependencies": {
