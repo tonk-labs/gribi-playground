@@ -1,4 +1,4 @@
-import { NetworkCall } from '@gribi/mud';
+import { NetworkCall, Selector } from '@gribi/mud';
 import { WitnessRelation } from '@gribi/types'; 
 import { EVMRootSystem } from '@gribi/evm-rootsystem';
 import { Vault, Utils, PrivateEntry } from '@gribi/vault';
@@ -65,5 +65,15 @@ export function createModuleCalls(call: NetworkCall) {
         updateCommitment,
         revealCommitment
     }
+}
 
+export class CommitSelector implements Selector {
+    select(): number | null  {
+        const entry = Vault.getDataAtSlot(EVMRootSystem.walletAddress, MODULE_ID.toString(), 0) as PrivateEntry<WitnessRelation<Commitment[], StoredCommitment>>;
+        if (!entry) {
+            return null;
+        } else {
+            return entry.value.witness.secret.slice(-1)[0] as number;
+        }
+    }
 }

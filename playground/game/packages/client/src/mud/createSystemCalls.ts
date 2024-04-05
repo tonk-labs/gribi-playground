@@ -2,8 +2,8 @@ import { Has, HasValue, getComponentValue, runQuery } from "@latticexyz/recs";
 import { ClientComponents } from "./createClientComponents";
 import { SetupNetworkResult } from "./setupNetwork";
 import { singletonEntity } from "@latticexyz/store-sync/recs";
-import { Module, NetworkCall, Transaction } from "gribi-js";
- 
+import { NetworkCall, Module } from "@gribi/mud"; 
+import { Transaction } from "@gribi/evm-rootsystem";
 export type SystemCalls = ReturnType<typeof createSystemCalls>;
 
 import Modules from "../gribi";
@@ -23,9 +23,11 @@ export function createSystemCalls(
   const mudCall: NetworkCall = async (transaction: Transaction) => {
     let tx;
     if (transaction.proof) {
-      tx = await worldContract.write.execute([transaction.id, transaction.data, transaction.proof]);
+      // tx = await worldContract.write.execute([transaction.id, transaction.data, transaction.proof.data]);
+      // proofs are turned off until KernelCircuit is done
+      tx = await worldContract.write.execute([transaction.id as bigint, transaction.data]);
     } else {
-      tx = await worldContract.write.execute([transaction.id, transaction.data]);
+      tx = await worldContract.write.execute([transaction.id as bigint, transaction.data]);
     }
     await waitForTransaction(tx);
   };

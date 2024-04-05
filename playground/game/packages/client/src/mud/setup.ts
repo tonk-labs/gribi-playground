@@ -1,14 +1,12 @@
 /*
  * This file sets up all the definitions required for a MUD client.
  */
-import { createSecrets } from "@gribi/mud";
-
 import { createClientComponents } from "./createClientComponents";
 import { createSystemCalls } from "./createSystemCalls";
 import { setupNetwork } from "./setupNetwork";
+import { privateState } from "../gribi/state";
 
 export type SetupResult = Awaited<ReturnType<typeof setup>>;
-
 
 export async function setup() {
   const network = await setupNetwork();
@@ -17,13 +15,9 @@ export async function setup() {
 
   //Gribi stuff
   systemCalls.registerModules();
-  const getWalletAddress = () => {
-    return network.walletClient.account.address;
-  };
-  const vault = createSecrets(getWalletAddress);
 
   return {
-    vault,
+    privateState,
     network,
     components,
     systemCalls
