@@ -26,8 +26,8 @@ export default defineConfig(({ mode, command }) => {
         target: 'esnext',
         lib: {
           entry: path.resolve(__dirname, 'src/index.ts'),
-          name: '@gribi/vault',
-          fileName: (format) => `vault.${format}.js`
+          name: 'example-gribi-module',
+          fileName: (format) => `example-gribi-module.${format}.js`
         }
       }
     }

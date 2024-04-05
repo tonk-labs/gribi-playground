@@ -1,205 +1,139 @@
-import { keccak256, toHex, encodePacked, hexToBigInt } from 'viem';
+import { keccak256, toHex } from 'viem';
 import { 
-    PCD, 
-    PCDURI,
     Signal, 
-    PCDModule, 
-    PCDPackage, 
     Field,
-    SerializedPCD, 
     Receptor,
 } from '@gribi/types';
-import { ProofData } from "@noir-lang/types";
-import { Utils, PrivateEntry } from "@gribi/vault";
-import { StateUpdate, generateProof } from "@gribi/evm-rootsystem";
+import { WitnessRelation, Precursor } from '@gribi/types';
+import { Utils } from "@gribi/vault";
+import { EVMRootSystem, StateUpdate, prove } from "@gribi/evm-rootsystem";
 import { CompiledCircuit } from '@noir-lang/backend_barretenberg';
 
 import CommitCheck from '../../circuits/commit/target/commit.json';
 
-const MODULE_ID = BigInt(keccak256(toHex("example-module"))).toString();
-const TYPES = {
-    CREATE_COMMITMENT: "create-commitment",
-    UPDATE_COMMITMENT: "update-commitment"
-}
+export const MODULE_ID = BigInt(keccak256(toHex("example-module")));
 
 export type Commitment = string;
-export type CommitmentUpdate = {
-    prev: Commitment,
-    updated: Commitment
-}
-export type ProperlyCommittedProof = {
-    data?: ProofData 
-}
 export type CommitmentArgs = {
     secret: Field,
     salt: Field,
 }
 
 export type StoredCommitment = {
-    commitment: Field,
-    secret: Field,
-    salt: Field,
+    secret: Field[],
+    salt: Field[],
 }
 
 export type UpdateCommitmentArgs = {
-    entry: PrivateEntry<StoredCommitment>,
-    circuit: CompiledCircuit,
+    relation: WitnessRelation<Commitment[], StoredCommitment>,
+    circuit?: CompiledCircuit,
     secret: Field,
     salt: Field,
 }
 
-export class CommitRevealPackage implements PCDPackage {
-    namespace = MODULE_ID
-    module(type: string | undefined): Promise<PCDModule> {
-        switch (type) {
-            case TYPES.CREATE_COMMITMENT: {
-                return new Promise(() => new CreateCommitmentModule());
-            }
-            case TYPES.UPDATE_COMMITMENT: {
-                return new Promise(() => new UpdateCommitmentModule());
-            }
-            default: {
-                throw new Error("This is not a valid type!");
+export class CreateCommitment implements Precursor<CommitmentArgs, Commitment[], StoredCommitment> {
+    async bond(args: CommitmentArgs): Promise<WitnessRelation<Commitment[], StoredCommitment>> {
+        const commitment = (await Utils.pedersenHash([args.salt as bigint, args.secret as bigint])).toString();
+        return {
+            claim: [commitment.toString()],
+            witness: {
+                secret: [args.secret],
+                salt: [args.salt]
             }
         }
     }
-} 
+}
 
-export class CreateCommitmentModule implements PCDModule<Commitment, ProperlyCommittedProof, CommitmentArgs> {
-    type = TYPES.CREATE_COMMITMENT
-    async prove(args: CommitmentArgs): Promise<PCD<Commitment, ProperlyCommittedProof>> {
+export class UpdateCommitment implements Precursor<UpdateCommitmentArgs, Commitment[], StoredCommitment> {
+    async bond(args: UpdateCommitmentArgs): Promise<WitnessRelation<Commitment[], StoredCommitment>> {
         const commitment = (await Utils.pedersenHash([args.salt as bigint, args.secret as bigint])).toString();
+        return {
+            claim: [args.relation.claim.pop()!, commitment],
+            witness: {
+                secret: [args.relation.witness.secret.pop()!, args.secret],
+                salt: [args.relation.witness.salt.pop()!, args.salt]
+            }
+        }
+    }
+}
+
+export class CreateCommitmentReceptor implements Receptor<WitnessRelation<Commitment[], StoredCommitment>, StateUpdate> {
+    async signal(args: WitnessRelation<Commitment[], StoredCommitment>): Promise<Signal<StateUpdate>> {
         let cc = CommitCheck as CompiledCircuit;
-        const data = await generateProof(cc, {
-            commitment: commitment,
+        const inputs =  [Utils.EmptyInput()];
+        const operations = [{
+            opid: 0,
+            value: BigInt(args.claim.pop()!),
+        }];
+        const proof = await prove(EVMRootSystem.walletAddress, cc, inputs, operations, {
+            secret: args.witness.secret.toString(),
+            salt: args.witness.salt.toString()
+        });
+
+        return {
+            output: {
+                id: MODULE_ID,
+                method: 'createCommitment',
+                inputs,
+                operations,
+                proof
+            }
+        }
+    }
+}
+
+export class UpdateCommitmentReceptor implements Receptor<UpdateCommitmentArgs, StateUpdate> {
+    async signal(args: UpdateCommitmentArgs): Promise<Signal<StateUpdate>> {
+        let cc = CommitCheck as CompiledCircuit;
+        const inputs = [Utils.EmptyInput()];
+        const operations = [
+            {
+                opid: 0,
+                value: BigInt(args.relation.claim[1]),
+                nullifier: BigInt(args.relation.claim[0]),
+            },
+        ];
+        const proof = await prove(EVMRootSystem.walletAddress, args.circuit || cc, inputs, operations, {
             secret: args.secret.toString(),
             salt: args.salt.toString()
-        });
+        })
 
-        return {
-            uri: new PCDURI(MODULE_ID, this.type, commitment),
-            claim: commitment,
-            proof: { data }
-        }
-    }
-
-    async verify(pcd: PCD<Commitment, ProperlyCommittedProof>): Promise<boolean> {
-        return true;
-    }
-
-    async serialize(pcd: PCD<string, ProperlyCommittedProof>): Promise<SerializedPCD<PCD<Commitment, ProperlyCommittedProof>>> {
-        return {
-            pcd: ""
-        }
-    }
-    async deserialize(serialized: SerializedPCD<PCD<unknown, unknown>>): Promise<PCD<Commitment, ProperlyCommittedProof>> {
-        return {
-            uri: new PCDURI(MODULE_ID, this.type, ""),
-            claim: "",
-            proof: {
-            }
-        }
-    }
-}
-
-export class UpdateCommitmentModule implements PCDModule<CommitmentUpdate, ProperlyCommittedProof, UpdateCommitmentArgs> {
-    type = TYPES.UPDATE_COMMITMENT
-    async prove(args: UpdateCommitmentArgs): Promise<PCD<CommitmentUpdate, ProperlyCommittedProof>> {
-        const commitment = (await Utils.pedersenHash([args.salt as bigint, args.secret as bigint])).toString();
-        const data = await generateProof(args.circuit, {
-            old_commitment: args.entry.value.commitment.toString(),
-            old_secret: args.entry.value.secret.toString(),
-            old_salt: args.entry.value.salt.toString(), 
-            new_secret: args.secret.toString(),
-            new_salt: args.salt.toString()
-        });
-
-        return {
-            uri: new PCDURI(MODULE_ID, this.type, commitment),
-            claim: { prev: commitment, updated: commitment },
-            proof: { data }
-        }
-    }
-
-    async verify(pcd: PCD<CommitmentUpdate, ProperlyCommittedProof>): Promise<boolean> {
-        return true;
-    }
-
-    async serialize(pcd: PCD<CommitmentUpdate, ProperlyCommittedProof>): Promise<SerializedPCD<PCD<CommitmentUpdate, ProperlyCommittedProof>>> {
-        return {
-            pcd: ""
-        }
-    }
-    async deserialize(serialized: SerializedPCD<PCD<unknown, unknown>>): Promise<PCD<CommitmentUpdate, ProperlyCommittedProof>> {
-        return {
-            uri: new PCDURI(MODULE_ID, this.type, ""),
-            claim: { prev: "", updated: ""},
-            proof: {
-            }
-        }
-    }
-}
-
-export class PublishNewCommitment implements Receptor<Commitment, ProperlyCommittedProof, StateUpdate> {
-    signal(pcd: PCD<Commitment, ProperlyCommittedProof>): Signal<StateUpdate> {
         return {
             output: {
-                id: hexToBigInt(toHex(keccak256(encodePacked(["string"], [pcd.uri.string])))),
-                method: "createCommitment",
-                inputs: [Utils.EmptyInput()],
+                id: MODULE_ID,
+                method: 'updateCommitment',
+                inputs,
+                operations,
+                proof
+            }
+        }
+    }
+}
+
+export class RevealCommitment implements Receptor<WitnessRelation<Commitment[], StoredCommitment>, StateUpdate> {
+    async signal(args: WitnessRelation<Commitment[], StoredCommitment>): Promise<Signal<StateUpdate>> {
+        const commitment = args.claim.pop()!;
+        const secret = args.witness.secret.pop()!;
+        const salt = args.witness.salt.pop()!;
+        return {
+            output: {
+                id: MODULE_ID,
+                method: "revealCommitment",
+                inputs: [{
+                    slot: 0,
+                    value: commitment
+                }, {
+                    slot: 0,
+                    value: salt
+                }, {
+                    slot: 0,
+                    value: secret
+                }],
                 operations: [{
                     opid: 0,
-                    value: BigInt(pcd.claim),
+                    nullifier: commitment
                 }]
             }
-        }
-    }
-}
-
-export class PublishUpdateCommitment implements Receptor<CommitmentUpdate, ProperlyCommittedProof, StateUpdate> {
-    signal(pcd: PCD<CommitmentUpdate, ProperlyCommittedProof>): Signal<StateUpdate> {
-        return {
-            output: {
-                id: hexToBigInt(toHex(keccak256(encodePacked(["string"], [pcd.uri.string])))),
-                method: "updateCommitment",
-                inputs: [Utils.EmptyInput()],
-                operations: [
-                    {
-                        opid: 0,
-                        value: BigInt(pcd.claim.updated),
-                        nullifier: BigInt(pcd.claim.prev),
-                    },
-                ]
-            }
-        }
-    }
-}
-
-export const RevealCommitment = async (entry: PrivateEntry<StoredCommitment>): Promise<Signal<StateUpdate>> => {
-    let cc = CommitCheck as CompiledCircuit;
-    const data = await generateProof(cc, {
-        commitment: entry.value.commitment.toString(),
-        secret: entry.value.secret.toString(),
-        salt: entry.value.salt.toString()
-    });
-    return {
-        output: {
-            id: hexToBigInt(toHex(keccak256(encodePacked(["string", "string"], [entry.pcd!.id, entry.value.commitment.toString()])))),
-            method: "revealCommitment",
-            inputs: [{
-                slot: 0,
-                value: entry.value.commitment
-            }, {
-                slot: 0,
-                value: entry.value.salt
-            }, {
-                slot: 0,
-                value: entry.value.secret
-            }],
-            operations: [{
-                opid: 0,
-                nullifier: entry.value.commitment
-            }]
         }
     }
 }

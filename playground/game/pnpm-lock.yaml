@@ -41,6 +41,9 @@ importers:
       '@gribi/mud':
         specifier: ../../../../gribi/packages/mud-integration/packages/client
         version: link:../../../../gribi/packages/mud-integration/packages/client
+      '@gribi/types':
+        specifier: ../../../../gribi/packages/types
+        version: link:../../../../gribi/packages/types
       '@gribi/vault':
         specifier: ../../../../gribi/packages/vault
         version: link:../../../../gribi/packages/vault
@@ -80,12 +83,18 @@ importers:
       '@noir-lang/noirc_abi':
         specifier: ^0.23.0
         version: 0.23.0
+      backend-barretenberg,:
+        specifier: link:@noir-lang/backend-barretenberg,
+        version: link:@noir-lang/backend-barretenberg,
       contracts:
         specifier: workspace:*
         version: link:../contracts
       example-gribi-module:
         specifier: ../../../module/client
         version: link:../../../module/client
+      noir_js,:
+        specifier: link:@noir-lang/noir_js,
+        version: link:@noir-lang/noir_js,
       react:
         specifier: ^18.2.0
         version: 18.2.0
