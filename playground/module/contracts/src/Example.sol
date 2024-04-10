@@ -46,6 +46,9 @@ contract Example is BaseThread {
         uint256 secret = transaction.inputs[2].value;
 
         require(forest.commitmentExists(commitment), "This value was not properly committed to earlier!");
+        require(!forest.nullifierExists(transaction.operations[0].nullifier), "This value was not properly committed to earlier!");
+        forest.addNullifier(transaction.operations[0].nullifier);
+
         uint256 hash = uint256(keccak256(abi.encodePacked([salt, secret])));
         require(hash == commitment, "The revealed commitment is incorrect");
 

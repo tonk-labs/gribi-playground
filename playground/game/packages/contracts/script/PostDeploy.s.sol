@@ -7,6 +7,7 @@ import { TerrainType } from "../src/codegen/common.sol";
 import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 import { EncounterTrigger, MapConfig, GribiConfig, Obstruction, Position } from "../src/codegen/index.sol";
 import { positionToEntityKey } from "../src/positionToEntityKey.sol";
+import { IWorld } from "../src/codegen/IWorld.sol";
 
 contract PostDeploy is Script {
   function run(address worldAddress) external {
@@ -69,6 +70,8 @@ contract PostDeploy is Script {
     
     //SETUP GRIBI
     GribiConfig.set(address(0x5424592c50E08DF0023b3ffFdb396670643274CE));
+    // need to test if this works
+    IWorld(worldAddress).registerModules();
 
     vm.stopBroadcast();
   }

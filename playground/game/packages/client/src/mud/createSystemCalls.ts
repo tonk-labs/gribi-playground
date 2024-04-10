@@ -12,7 +12,8 @@ export function createSystemCalls(
   { playerEntity, worldContract, waitForTransaction }: SetupNetworkResult,
   { Encounter, MapConfig, MonsterCatchAttempt, Obstruction, Player, Position }: ClientComponents
 ) {
-  /**
+
+    /**
    * GRIBI Stuff
    */
   const registerModules = async () => {
@@ -32,14 +33,6 @@ export function createSystemCalls(
     await waitForTransaction(tx);
   };
 
-  function combineGribiModuleCalls<T>(modules: Module<T>[]): T {
-    return modules.map((module) => module.createModuleCalls(mudCall)).reduce((acc, value) => {
-      return {
-        ...acc,
-        ...value
-      }
-    }, {} as T);
-  } 
 
   /**
    * Here's the rest of your SystemCall Code 
@@ -135,7 +128,7 @@ export function createSystemCalls(
     spawn,
     throwBall,
     fleeEncounter,
-    ...combineGribiModuleCalls(Modules),
+    ...combineGribiModuleCalls(Modules, mudCall),
   };
 }
 

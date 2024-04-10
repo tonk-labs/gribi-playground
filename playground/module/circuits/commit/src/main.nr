@@ -24,7 +24,7 @@ fn main(
 	// public_root: pub Field,
 
 	//Arbitrary private variables would go below here
-	commitment: Field
+	commitment: Field,
 	secrets: Field,
 	salt: Field
 ) {

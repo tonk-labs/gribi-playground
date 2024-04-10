@@ -14,7 +14,9 @@ export async function setup() {
   const systemCalls = createSystemCalls(network, components);
 
   //Gribi stuff
-  systemCalls.registerModules();
+  // commenting out so this isn't called over and over again
+  // it really doesn't belong here
+  // systemCalls.registerModules();
 
   return {
     privateState,

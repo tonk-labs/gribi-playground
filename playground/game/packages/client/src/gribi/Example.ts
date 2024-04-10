@@ -23,10 +23,12 @@ export function createModuleCalls(call: NetworkCall) {
             secret, 
             salt,
         });
+
         const entry = {
             slot: 0,
             value: witness
         }
+
         const signal = await new CreateCommitmentReceptor().signal(witness);
         const txs = await EVMRootSystem.createTxs([signal]);
         await Promise.all(txs.map(async (tx) => await call(tx)));
@@ -41,11 +43,13 @@ export function createModuleCalls(call: NetworkCall) {
             secret: newSecret,
             salt,
         });
+
         const signal = await new UpdateCommitmentReceptor().signal({
             relation: witness,
             secret: newSecret,
             salt
         });
+
         entry.value = witness;
         const txs = await EVMRootSystem.createTxs([signal]);
         await Promise.all(txs.map(async (tx) => await call(tx)));
