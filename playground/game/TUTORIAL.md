@@ -5,11 +5,11 @@ In this tutorial, we will take a look at how a simple MUD game, Emojimon, integr
 Prerequisite: it is recommended to read the first few paragraphs of the [How to Write a Module]() tutorial to understand the high-level architecture of a Gribi module. 
 
 ## Table of Contents
-- [Setup & Install]()
-    - [Install Gribi]()
-    - [Install the Module]()
-- [gribi/Example.ts]()
-    - [Selectors]()
+- [Setup & Install](#setup--install)
+    - [Install Gribi](#install-gribi)
+    - [Install the Module](#install-the-module)
+- [gribi/Example.ts](#gribiexamplets)
+    - [Selectors](#selectors)
 
 
 ## Setup & Install
@@ -55,11 +55,11 @@ Add the following to your `mud.config.ts`
     },
 ```
 
-We also use `contracts/systems/GribiSystem.sol` to communicate with Gribi from the client. That is, Gribi piggybacks off the MUD network glue code to send messages from the client. You will need to copy this over to your project.
+We also use [GribiSystem.sol](../../gribi/packages/mud-integration/packages/contract/GribiSystem.sol) to communicate with Gribi from the client. That is, Gribi piggybacks off the MUD network glue code to send messages from the client. You will need to copy this over to your project.
 
-The `GribiSystem.sol` is also where you will register your modules. You can see an example of how the Example module is registered.
+The [GribiSystem.sol](../../gribi/packages/mud-integration/packages/contract/GribiSystem.sol) is also where you will register your modules. You can see an example of how the Example module is registered.
 
-Finally, for convenience, change the `playground/game/mprocs.yaml` to include the following:
+Finally, for convenience, change the [`playground/game/mprocs.yaml`](mprocs.yaml) to include the following:
 ```
 gribi:
     cwd: packages/contracts
@@ -67,7 +67,7 @@ gribi:
     autostart: true
 ```
 
-and add to the scripts in `contracts/package.json` the following line
+and add to the scripts in [`contracts/package.json`](packages/contracts/package.json) the following line
 
 ```
     ...
@@ -148,7 +148,7 @@ function registerModules(address gribiAddress) public {
 
 # [gribi/Example.ts]()
 
-Most of the logic starts in the [client/gribi/Example.ts]() file where we wrap our logic in this line:
+Most of the logic starts in the [Example.ts](pac/client/sgribi/) file where we wrap our logic in this line:
 
 ```
 export function createModuleCalls(call: NetworkCall) 

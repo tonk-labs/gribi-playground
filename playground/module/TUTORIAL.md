@@ -4,22 +4,28 @@ Modules are the building blocks of complex behavior in Gribi. If you want to do 
 example module available in this folder.
 
 ## Table of Contents
-- [What kind of module are you writing?]()
-- [Vault]()
-- [RootSystem]()
-- [Getting Started]()
-    - [EVMRootSystem]()
-    - [BaseThread.sol]()
-    - [contract/Example.sol]()
-    - [circuits/commit/src/main.nr]()
-    - [client/src/index.ts]()
+- [What kind of module are you writing?](#what-kind-of-module-are-you-writing)
+- [Vault](#vault)
+- [RootSystem](#rootsystem)
+- [Getting Started](#getting-started)
+    - [EVMRootSystem](#evmrootsystem)
+    - [BaseThread.sol](#basethreadsol)
+    - [contract/Example.sol](#contractexamplesol)
+    - [circuits/commit/src/main.nr](#circuitscommitsrcmainnr)
+    - [client/src/index.ts](#clientsrcindexts)
 
 ## What kind of module are you writing?
-
+<!-- Link not added -->
 Not all modules in Gribi are created equal. The gribi interfaces as defined [here]() work at different levels of the stack. 
-
-
+<!-- Include contracts and client in here -->
 ![diagram of gribi arch](../../gribi-arch.png)
+
+``` mermaid
+
+graph TB
+  
+
+```
 
 Modules may exist as
 1. a set of Transforms
@@ -27,19 +33,23 @@ Modules may exist as
 3. Receptors and RootSystem functionality
 4. etc.
 
+## Example file system
+ - circuits <br>*description*
+ - client <br>*description*
+    - src <br>*description*
+ - contracts <br>*description*
+    - lib <br>*Foundry stuff*
+ - package.json
+
 ## Vault
 
 Vaults are where you store secrets for client-side use. A user may want to retain ownership over a PCD making some claim over their identity for later use. A user creating commitments to client-side data in the RootSystem will want to display and update it in the clear client-side. All secrets have their hidden truths and these hidden truths go into the Vault. A module who wants a user to see or manipulate their hidden truths to create more PCDs or Signals will need to retrieve them from the Vault.
 
 ## RootSystem
 
-PCDs are self-evident, static objects. In other words, they are capable of attesting only to the data contained within. This is the source of their strength as composable and federated objects, but in order to augment their power we do occasionally want to transform them into a more stateful, ordered and dynamic form. This is why we have RootSystems. They "root" the data into some larger stateful system. Our example module uses the EVMRootSystem, a simplified private state framework which complements public state frameworks like MUD or Dojo. For now, our EVMRootSystem only supports MUD and EVM-based chains.
+PCDs are self-evident, static objects. In other words, they are capable of attesting only to the data contained within. This is the source of their strength as modular and united objects, but in order to augment their power we do occasionally want to transform them into a more stateful, ordered and dynamic form. This is why we have RootSystems. They "root" the data into some larger stateful system. Our example module uses the EVMRootSystem, a simplified private state framework which complements public state frameworks like MUD or Dojo. For now, our EVMRootSystem only supports MUD and EVM-based chains.
 
 RootSystems expose a simple interface and may have wide ranging implementations. In the EVMRootSystem, module client-code must interact with module specific behavior on the contract side. Our example module includes both code for the client (Transmitters and Receptors) and code for the contract (which are called Threads in EVMRootSystem)
-
-## Getting Started
-
-The rest of this document will follow an example module built for the EVMRootSystem. This module exposes the functionality to create, update, and reveal commitments. A module like this sets the foundation for more complex hidden information modules, like hidden movement.
 
 ### EVMRootSystem
 
@@ -56,9 +66,9 @@ We will cover these in reverse order.
 
 When you want to build a module for the EVMRootSystem, then you must either refer to an existing Thread or create your own. Let's take a look at what exactly a Thread is by examining the abstract BaseThread interface.
 
-We will see how these are used in the Example.sol immediately after.
+We will see how these are used in the [Example.sol](contracts/src/Example.sol) immediately after.
 
-```
+``` Solidity
 struct UpdateRegister {
     uint code;
     bytes value;
@@ -79,7 +89,8 @@ abstract contract BaseThread {
     }
 }
 ```
-We will go through it one by one
+<!--BL: Go through what one by one? -->
+We will breakdown the code below.
 <br/>
 <br/>
 
@@ -90,6 +101,8 @@ function peekUpdates() public view returns (UpdateRegister memory) {
     return register;
 }
 ```
+<!-- BL: first sentence is confusing -->
+<!-- BL: explain what codes are (give example of use?) -->
 Threads hold their own state, but are only meant to hold state for client-side cryptographic operations. Sometimes you need to move that state back into a framework optimized for viewing and manipulating state (for this example, MUD). It is expected that a module will set a unique code and fill the register following some operation to flag public state has become available for external frameworks.
 
 <br/>
@@ -105,7 +118,6 @@ A forest is a set of three merkle trees. A commitment tree, a nullifier tree and
 
 <br/>
 <br/>
-<br/>
 
 ```
 function getModuleID() public virtual pure returns (uint256); 
@@ -116,10 +128,93 @@ Every module in EVMRootSystem is given a unique ID. Client code when using a mod
 <br/>
 <br/>
 
+## Transactions
+
+First, what is a Transaction? We can see them defined in the [Structs.sol](contracts/lib/evm-rootsystem/contracts/src/Structs.sol) file of EVMRootSystem contracts.
+
+``` Solidity
+struct PublicInput {
+    uint256 slot;
+    uint256 value;
+}
+
+struct Operation {
+    uint256 opid;
+    uint256 value;
+    uint256 nullifier;
+}
+
+struct Transaction {
+    PublicInput[] inputs;
+    Operation[] operations;
+}
+```
+
+Transactions are simply arrays of PublicInputs and Operations. Circuits are required to take a Transaction as input. The EVMRootSystem expects no more than 8 of each of these arrays. So, we can have a maximum of 8 PublicInputs and 8 Operations in one Transaction.
+
+
+## Getting Started
+
+The rest of this document will follow an example module built for the EVMRootSystem. This module exposes the functionality to create, update, and reveal commitments. A module like this sets the foundation for more complex hidden information modules, like hidden movement.
 
 ### contract/Example.sol
 
-Now take a look at the Example.sol file in our module/contracts folder. We will highlight specific units of code to describe how it's implemented.
+Now take a look at the [Example.sol](contracts/src/Example.sol) file. We will highlight specific units of code to describe how it's implemented.
+
+```Solidity
+contract Example is BaseThread {
+    enum Codes { UNSET, REVEAL_COMMITMENT }
+    constructor() {
+        codes = new uint[](2);
+        codes[uint(Codes.UNSET)] = 0;
+        codes[uint(Codes.REVEAL_COMMITMENT)] = 0;
+        register = UpdateRegister(uint(Codes.UNSET), bytes(""));
+    }
+    function getModuleID() public virtual pure override returns (uint256) {
+        return uint256(keccak256(abi.encodePacked("example-module")));
+    }
+
+    function parse(UpdateRegister memory ur) public pure returns (uint256) {
+        if (ur.code == uint(Codes.REVEAL_COMMITMENT)) {
+            return abi.decode(ur.value, (uint256));
+        }
+    }
+
+    function createCommitment(Transaction memory transaction) external {
+        if (transaction.operations.length > 0) {
+            require(!forest.nullifierExists(transaction.operations[0].value), "This commitment has been nullified");
+            forest.addCommitment(transaction.operations[0].value);
+        }
+    }
+
+    function updateCommitment(Transaction memory transaction) external {
+        if (transaction.operations.length > 0) {
+            require(!forest.nullifierExists(transaction.operations[0].value), "This commitment has been nullified");
+            forest.addCommitment(transaction.operations[0].value);
+            forest.addNullifier(transaction.operations[0].nullifier);
+        }
+    }
+
+    function revealCommitment(Transaction memory transaction) external {
+        require(transaction.inputs.length > 2, "malformed transaction");
+        uint256 commitment = transaction.inputs[0].value;
+        uint256 salt = transaction.inputs[1].value;
+        uint256 secret = transaction.inputs[2].value;
+
+        require(forest.commitmentExists(commitment), "This value was not properly committed to earlier!");
+        require(!forest.nullifierExists(transaction.operations[0].nullifier), "This value was not properly committed to earlier!");
+        forest.addNullifier(transaction.operations[0].nullifier);
+
+        uint256 hash = uint256(keccak256(abi.encodePacked([salt, secret])));
+        require(hash == commitment, "The revealed commitment is incorrect");
+
+        register = UpdateRegister(
+            uint(Codes.REVEAL_COMMITMENT),
+            abi.encode(secret)
+        );
+    }
+}
+```
 
 <br/>
 <br/>
@@ -147,8 +242,13 @@ We have two codes:
 
 Now, let's take a look at one of the functions on our module.
 
+``` Solidity
+    function getModuleID() public virtual pure override returns (uint256) {
+        return uint256(keccak256(abi.encodePacked("example-module")));
+    }
 ```
- function revealCommitment(Transaction memory transaction) external {
+``` Solidity
+    function revealCommitment(Transaction memory transaction) external {
         require(transaction.inputs.length > 2, "malformed transaction");
         uint256 commitment = transaction.inputs[0].value;
         uint256 salt = transaction.inputs[1].value;
@@ -168,9 +268,9 @@ Now, let's take a look at one of the functions on our module.
 <br/>
 <br/>
 
-First, what is a Transaction? We can see them defined in the Structs.sol file of EVMRootSystem contracts.
+First, what is a Transaction? We can see them defined in the [Structs.sol](contracts/lib/evm-rootsystem/contracts/src/Structs.sol) file of EVMRootSystem contracts.
 
-```
+``` Solidity
 struct PublicInput {
     uint256 slot;
     uint256 value;
@@ -199,10 +299,10 @@ these inputs are expected to come from the public tree. The EVMRootSystem will f
 <br/>
 
 Second we understand modules are responsible for managing their own forest. 
-```
-require(forest.commitmentExists(commitment), "This value was not properly committed to earlier!");
-require(!forest.nullifierExists(transaction.operations[0].nullifier), "This value was not properly committed to earlier!");
-        forest.addNullifier(transaction.operations[0].nullifier);
+``` Solidity
+    require(forest.commitmentExists(commitment), "This value was not properly committed to earlier!");
+    require(!forest.nullifierExists(transaction.operations[0].nullifier), "This value was not properly committed to earlier!");
+    forest.addNullifier(transaction.operations[0].nullifier);
 ```
 
 These lines use the commitment tree to make sure we aren't revealing a made-up commitment and the nullifier tree to make sure we haven't revealed this commitment before.
@@ -213,14 +313,14 @@ You can also see further down we check to make sure the commitment is well forme
 <br/>
 
 Finally we want to move this secret back into MUD so all players can see the reveal. Values in the register are encoded to allow for arbitrary return types. This means whoever will read the type needs to know the underlying structure of the encoded data. In order to make this easier, this module includes an add-on convenience function for parsing data.
-```
+``` Solidity
 register = UpdateRegister(
             uint(Codes.REVEAL_COMMITMENT),
             abi.encode(secret)
         );
 ```
 This function is not included in the interface because solidity does not allow for generics. In the future we may discover a more convenient way to do pass along the structure of the register value data.
-```
+``` Solidity
 function parse(UpdateRegister memory ur) public pure returns (uint256) {
         if (ur.code == uint(Codes.REVEAL_COMMITMENT)) {
             return abi.decode(ur.value, (uint256));
@@ -236,7 +336,7 @@ The EVMRootSystem expects our Circuits to be written in [Noir](), a rust-like ci
 
 
 The interface below describes the public and private inputs to our module circuit in Noir.
-```
+``` noir
 fn main(
 	address: pub Field,
 	inputs: pub [PublicInput; 8],
@@ -275,7 +375,7 @@ This brings us finally to the module's client code. As above, we will go through
 <br/>
 
 The first thing to note is that we are defining this thing called a Precursor.
-```
+``` typescript
 export class CreateCommitment implements Precursor<CommitmentArgs, Commitment[], StoredCommitment> {
     async bond(args: CommitmentArgs): Promise<WitnessRelation<Commitment[], StoredCommitment>> {
         const commitment = (await Utils.pedersenHash([args.salt as bigint, args.secret as bigint])).toString();
@@ -330,6 +430,7 @@ We form the PublicInputs and Operations. We create the proof using those inputs.
 
 That's it!
 
+<!-- Missing link -->
 But, where's our Transaction? How does this StateUpdate reach the contract? In order to understand that, we'll need to take a look at the [Using a Module in MUD]() tutorial.
 
 
