@@ -2,7 +2,7 @@
 
 In this tutorial, we will take a look at how a simple MUD game, Emojimon, integrates with the Example module available in the `playground/module` folder. This Example module exposes a commit, update and reveal API. Something that might be useful for our emojimon game! 
 
-Prerequisite: it is recommended to read the first few paragraphs of the [How to Write a Module]() tutorial to understand the high-level architecture of a Gribi module. 
+Prerequisite: it is recommended to read the first few paragraphs of the [How to Write a Module]() tutorial to understand the high-level architecture of a Gribi module. If you just want to get on with using Gribi to enrich your app, you should skip the rest of that tutorial, which is relevant only to those who want to go a step deeper and start writing modules. Module-writing is possible only for those who have a reasonable awareness of the theory and practice of cryptography.
 
 ## Table of Contents
 - [Setup & Install]()
