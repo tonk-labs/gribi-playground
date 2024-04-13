@@ -4,53 +4,35 @@ A little playground to try out the Gribi interface
 Setup
 ---
 
-### Fetch the Gribi repository, build and create links
+### Fetch the Gribi repository and build 
 
 ```
+cd gribi
 git submodule update --init
+node scripts/build.js
 ```
 
+### Install and build module
 ```
-cd gribi/packages/contracts
-pnpm install
-forge build
-pnpm link --global 
-cd -
-```
-
-```
-cd gribi/packages/gribi-js
-pnpm install
-pnpm link --global 
-cd -
+cd playground/module/circuits
+pnpm i & pnpm build
+cd playground/module/client
+pnpm i & pnpm build
+cd playground/module/contracts
+pnpm i & pnpm build
 ```
 
+### Install and build MUD game
 ```
-cd gribi/packages/gribi-mud
-pnpm install
-pnpm link --global 
-cd -
-```
-
-### Link everything and install 
-```
-cd playground/game/packages/contracts 
-pnpm install
-pnpm link --global gribi-contracts
-cd -
-```
-
-```
-cd playground/game/packages/client
-pnpm install
-pnpm link --global gribi-js
-pnpm link --global gribi-mud
-cd -
+cd playground/game/client
+pnpm i
+cd playground/game/contracts
+pnpm i
 ```
 
 ### Run the dev setup 
 ```
-cd playground
+cd playground/game
 pnpm install
 pnpm run dev
 ```
