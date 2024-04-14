@@ -3,9 +3,9 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import { Transaction, Operation, PublicInput } from "@gribi/evm-rootsystem/Structs.sol";
-import {Example} from "../src/Example.sol";
+import { CommitUpdateReveal } from "../src/CommitUpdateReveal.sol";
 
-contract ExampleTest is Test {
+contract CommitUpdateRevealTest is Test {
     Example public example;
 
     function setUp() public {

@@ -5,7 +5,7 @@ import { BaseThread, UpdateRegister } from "@gribi/evm-rootsystem/BaseThread.sol
 import { Transaction, Operation, PublicInput } from "@gribi/evm-rootsystem/Structs.sol";
 import { Forest } from "@gribi/evm-rootsystem/Forest.sol";
 
-contract Example is BaseThread {
+contract CommitUpdateReveal is BaseThread {
     enum Codes { UNSET, REVEAL_COMMITMENT }
     constructor() {
         codes = new uint[](2);
