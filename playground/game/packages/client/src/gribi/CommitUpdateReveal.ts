@@ -11,7 +11,7 @@ import {
     StoredCommitment,
     UpdateCommitment,
     UpdateCommitmentReceptor
-} from 'example-gribi-module';
+} from 'commit-update-reveal';
 
 export type ModuleCalls = ReturnType<typeof createModuleCalls>;
 

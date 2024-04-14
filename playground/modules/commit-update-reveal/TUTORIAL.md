@@ -16,26 +16,14 @@ example module available in this folder.
 
 ## What kind of module are you writing?
 
-Not all modules in Gribi are created equal. The gribi interfaces as defined [here]() work at different levels of the stack. 
-
-
-![diagram of gribi arch](../../gribi-arch.png)
-
-Modules may exist as
+Modules may exist as:
 1. a set of Transforms
-2. a Transmitter, Receptor and Transform
-3. Receptors and RootSystem functionality
+2. an IRootSystem(Transmitters and Receptors) and Transform
+3. an IRootSystem(Transmitters and Receptors) and RootSystem mods
 4. etc.
 
-## Vault
+Not all modules in Gribi are created equal. The gribi interfaces as defined [here](https://github.com/tonk-gg/gribi/blob/main/packages/types) work at different levels of the stack. This tutorial will cover a special type of module made for hidden information on the EVMRootSystem.
 
-Vaults are where you store secrets for client-side use. A user may want to retain ownership over a PCD making some claim over their identity for later use. A user creating commitments to client-side data in the RootSystem will want to display and update it in the clear client-side. All secrets have their hidden truths and these hidden truths go into the Vault. A module who wants a user to see or manipulate their hidden truths to create more PCDs or Signals will need to retrieve them from the Vault.
-
-## RootSystem
-
-PCDs are self-evident, static objects. In other words, they are capable of attesting only to the data contained within. This is the source of their strength as composable and federated objects, but in order to augment their power we do occasionally want to transform them into a more stateful, ordered and dynamic form. This is why we have RootSystems. They "root" the data into some larger stateful system. Our example module uses the EVMRootSystem, a simplified private state framework which complements public state frameworks like MUD or Dojo. For now, our EVMRootSystem only supports MUD and EVM-based chains.
-
-RootSystems expose a simple interface and may have wide ranging implementations. In the EVMRootSystem, module client-code must interact with module specific behavior on the contract side. Our example module includes both code for the client (Transmitters and Receptors) and code for the contract (which are called Threads in EVMRootSystem)
 
 ## Getting Started
 
@@ -43,12 +31,29 @@ The rest of this document will follow an example module built for the EVMRootSys
 
 ### EVMRootSystem
 
-[PLACEHOLDER EVMROOTSYSTEM GRAPHIC]
+```mermaid
+%% A diagram describing the structure of EVMRootSystem in gribi-playground
+flowchart TD
+    subgraph client
+    A[UI] -->|Input| B[Module.ts]
+    C -->  B
+    B --> C[Vault]    
+    B --> |Circuit| D[Prover] 
+    D --> |Proof| B
+    end
+    subgraph EVM
+    b2 --> a1
+    a1[EVMRootSystem] --> |Transaction| b2[Module.sol]    
+    a1 --> c1[Verifier]
+    c1 --> a1
+    end    
+    B --> |Signal| a1 
+```
 
-An EVMRootSystem module consists of three things:
-1. Client code to handle the logic of creating Transactions, generating proofs and submitting them to the chain.  (Using Gribi interfaces)
-2. Circuit code to be used for proofs (built in Noir)
-3. Contract code to update onchain data structures and move state around (EVMRootSystem Threads).
+## Top level packages
+ - circuits <br>*Used to generate proofs of client-side secrets or behavior, EVMRootSystem uses Noir*
+ - client <br>*Defines an API for the client-side code. Handles the logic of creating Transactions, generating client-side proofs and submitting them to chain.*
+ - contracts <br>*Defines how state is checked and updated in the EVMRootSystem*
 
 We will cover these in reverse order.
 
@@ -58,119 +63,155 @@ When you want to build a module for the EVMRootSystem, then you must either refe
 
 We will see how these are used in the Example.sol immediately after.
 
-```
+```solidity
 struct UpdateRegister {
     uint code;
     bytes value;
 }
 
 abstract contract BaseThread {
+    /**
+    Threads are stateful, isolated containers for your module. 
+    The state they carry is meant to assist in performing cryptographic
+    operations across the client and chain. Sometimes you need to move that
+    state back into a framework optimized for viewing and manipulating big    
+    tables of varied state (for example, MUD). It is expected behavior that 
+    after each call, a module will set a unique code and, if this state is 
+    relevant for an external framework, fill its register. Relevant here 
+    means any state you'd care about doing something other than cryptographic 
+    operations.
+    */
     uint[] codes;
     UpdateRegister internal register;
+
+    /**
+
+    A forest exposes three different merkle trees. A commitment tree, a nullifier tree and a public state tree. 
+    These three trees serve distinct cryptographic purposes.
+
+    1. Commitment trees may be used to hold a commitment to some state (e.g.
+    a hash of some private data). Storing commitments in a tree allows us to
+    prove facts over this commitment without sharing which commitment
+    specifically this fact is about.
+
+    2. Nullifier trees are used to hold nullifiers and are optimized to 
+    create proofs that something does not exist in the tree. You can think of 
+    nullifiers as a way to prevent double-spends over private state.
+
+    3. A public state tree is used similarly to the commitment tree except 
+    its leaves hold public state which is visible to all. This allows us to 
+    use public state anonymously in our circuits by proving the state we used
+    in the circuit exists in this tree.
+
+    */
     Forest internal forest;
 
     constructor() {
         forest = new Forest();
     }
 
+    /**
+        Every module in EVMRootSystem is given a unique ID. Client code, when using a
+        module through the EVMRootSystem will use this ID to route appropriately to the module's Thread.
+    */
     function getModuleID() public virtual pure returns (uint256); 
+
     function peekUpdates() public view returns (UpdateRegister memory) {
         return register;
     }
 }
 ```
-We will go through it one by one
-<br/>
-<br/>
-
-```
-uint[] codes
-UpdateRegister internal register
-function peekUpdates() public view returns (UpdateRegister memory) {
-    return register;
-}
-```
-Threads hold their own state, but are only meant to hold state for client-side cryptographic operations. Sometimes you need to move that state back into a framework optimized for viewing and manipulating state (for this example, MUD). It is expected that a module will set a unique code and fill the register following some operation to flag public state has become available for external frameworks.
-
-<br/>
-<br/>
-
-```
-Forest internal forest;
-```
-A forest is a set of three merkle trees. A commitment tree, a nullifier tree and a public state tree. These three trees serve distinct cryptographic purposes.
-1. Commitment trees may be used to hold a commitment to some state (e.g. a hash of some private data). Storing commitments in a tree allows us to prove facts over this commitment without sharing which commitment specifically this fact is about.
-2. Nullifier trees are used to hold nullifiers and are optimized to create proofs that something does not exist in the tree. You can think of nullifiers as a way to prevent double-spends over private state.
-3. A public state tree is used similarly to the commitment tree except its leaves hold public state which is visible to all. This allows us to use public state in our circuits by proving the state we used in the circuit exists in this tree.
-
-<br/>
-<br/>
-<br/>
-
-```
-function getModuleID() public virtual pure returns (uint256); 
-```
-
-Every module in EVMRootSystem is given a unique ID. Client code when using a module through the EVMRootSystem will use this ID to route appropriately to Thread.
-
-<br/>
-<br/>
-
 
 ### contract/Example.sol
 
 Now take a look at the Example.sol file in our module/contracts folder. We will highlight specific units of code to describe how it's implemented.
 
-<br/>
-<br/>
 
-```
-function getModuleID() public virtual pure override returns (uint256) {
+```solidity
+contract Example is BaseThread {
+    /** This Codes enum isn't necessary, it's just to make things more readable
+        How this integrates with a MUD system is basically a function
+        with one really long set of 'if' statements checking codes and
+        then calling parse on the UpdateRegister value for that specific
+        module.
+    */ 
+    enum Codes { UNSET, REVEAL_COMMITMENT }
+    constructor() {
+        codes = new uint[](2);
+        codes[uint(Codes.UNSET)] = 0;
+        codes[uint(Codes.REVEAL_COMMITMENT)] = 0;
+        register = UpdateRegister(uint(Codes.UNSET), bytes(""));
+    }
+    
+    // Keccak of a string provides for a simple way to define the module ID 
+    // which can be easily recreated on the client.
+    function getModuleID() public virtual pure override returns (uint256) {
         return uint256(keccak256(abi.encodePacked("example-module")));
     }
-```
 
-Keccak of a string provides for a simple way to define the module ID which can be easily recreated on the client.
-<br/>
-<br/>
+    function parse(UpdateRegister memory ur) public pure returns (uint256) {
+        if (ur.code == uint(Codes.REVEAL_COMMITMENT)) {
+            return abi.decode(ur.value, (uint256));
+        }
+    }
 
-```
-enum Codes { UNSET, REVEAL_COMMITMENT }
-```
+    // EVMRootSystem Module Threads spend most their time managing
+    // their forest
+    function createCommitment(Transaction memory transaction) external {
+        uint256 commitment = transaction.operations[0].value;
+        if (transaction.operations.length > 0) {
+            require(!forest.nullifierExists(commitment), "This commitment has been nullified");
+            forest.addCommitment(commitment);
+        }
+    }
 
-We have two codes:
-- UNSET which tells any listener to simply ignore
-- REVEAL_COMMITMENT which announces that a commitment has been revealed.
+    function updateCommitment(Transaction memory transaction) external {
+        uint256 commitment = transaction.operations[0].value;
+        uint256 nullifier = transaction.operations[0].nullifier;
+        if (transaction.operations.length > 0) {
+            require(!forest.nullifierExists(commitment), "This commitment has been nullified");
+            forest.addCommitment(commitment);
+            forest.addNullifier(nullifier);
+        }
+    }
 
-<br/>
-<br/>
-
-Now, let's take a look at one of the functions on our module.
-
-```
- function revealCommitment(Transaction memory transaction) external {
+    function revealCommitment(Transaction memory transaction) external {
         require(transaction.inputs.length > 2, "malformed transaction");
         uint256 commitment = transaction.inputs[0].value;
         uint256 salt = transaction.inputs[1].value;
         uint256 secret = transaction.inputs[2].value;
+        uint256 nullifier = transaction.operations[0].nullifer;
 
         require(forest.commitmentExists(commitment), "This value was not properly committed to earlier!");
+        require(!forest.nullifierExists(nullifier), "This value was not properly committed to earlier!");
+        forest.addNullifier(nullifier);
+
         uint256 hash = uint256(keccak256(abi.encodePacked([salt, secret])));
         require(hash == commitment, "The revealed commitment is incorrect");
 
+    /**
+        Finally we want to move our secret back into MUD so all players can see 
+        the reveal. Values in the register are encoded to allow for arbitrary 
+        return types. This means whoever will read the type needs to know the 
+        underlying structure of the encoded data. Code is a way to mark the 
+        return type. In order to encapsulate the code -> type translation, 
+        this module includes an add-on convenience function parse() for 
+        parsing data.
+    */
         register = UpdateRegister(
             uint(Codes.REVEAL_COMMITMENT),
             abi.encode(secret)
         );
     }
+}
 ```
 
-<br/>
-<br/>
 
-First, what is a Transaction? We can see them defined in the Structs.sol file of EVMRootSystem contracts.
+#### What is a Transaction? 
 
-```
+We can see them defined in the Structs.sol file of EVMRootSystem contracts.
+
+```solidity
 struct PublicInput {
     uint256 slot;
     uint256 value;
@@ -191,42 +232,10 @@ struct Transaction {
 Transactions are simply arrays of PublicInputs and Operations. Circuits are required to take a Transaction as input. The EVMRootSystem expects no more than 8 of each of these arrays. So, we can have a maximum of 8 PublicInputs and 8 Operations in one Transaction.
 
 **Operations**
-The meaning of opid, value and nullifier will be specific to your module. In this module the opid is not used. Value is the commitment and nullifier is only present when making updates or revealing commitments.
+The meaning of opid, value and nullifier will be specific to your module and are specified by you, the module writer. In this module the opid is not used. Value is the commitment and nullifier is only present when making updates or revealing commitments and is just a copy of the previous commitment.
 
 **PublicInput**
-these inputs are expected to come from the public tree. The EVMRootSystem will feed these inputs into the circuit verifier keying on slot. In our Example module we use slot 0, which tells the EVMRootSystem to not do a lookup into our tree. As such, PublicInputs at slot 0 allow for arbitrary inputs into our circuit.
-<br/>
-<br/>
-
-Second we understand modules are responsible for managing their own forest. 
-```
-require(forest.commitmentExists(commitment), "This value was not properly committed to earlier!");
-require(!forest.nullifierExists(transaction.operations[0].nullifier), "This value was not properly committed to earlier!");
-        forest.addNullifier(transaction.operations[0].nullifier);
-```
-
-These lines use the commitment tree to make sure we aren't revealing a made-up commitment and the nullifier tree to make sure we haven't revealed this commitment before.
-
-You can also see further down we check to make sure the commitment is well formed.
-
-<br/>
-<br/>
-
-Finally we want to move this secret back into MUD so all players can see the reveal. Values in the register are encoded to allow for arbitrary return types. This means whoever will read the type needs to know the underlying structure of the encoded data. In order to make this easier, this module includes an add-on convenience function for parsing data.
-```
-register = UpdateRegister(
-            uint(Codes.REVEAL_COMMITMENT),
-            abi.encode(secret)
-        );
-```
-This function is not included in the interface because solidity does not allow for generics. In the future we may discover a more convenient way to do pass along the structure of the register value data.
-```
-function parse(UpdateRegister memory ur) public pure returns (uint256) {
-        if (ur.code == uint(Codes.REVEAL_COMMITMENT)) {
-            return abi.decode(ur.value, (uint256));
-        }
-    }
-```
+PublicInput has a slot. The slot is used to fetch them from the public tree. The EVMRootSystem will feed these inputs into the circuit verifier. In our Example module you see we use slot 0, which is a special value in EVMRootSystem. It tells the EVMRootSystem to not do a lookup into our tree. As such, PublicInputs at slot 0 allow for arbitrary inputs to pass through.
 
 ### circuits/commit/src/main.nr
 
@@ -236,7 +245,7 @@ The EVMRootSystem expects our Circuits to be written in [Noir](), a rust-like ci
 
 
 The interface below describes the public and private inputs to our module circuit in Noir.
-```
+```rust
 fn main(
 	address: pub Field,
 	inputs: pub [PublicInput; 8],
@@ -270,12 +279,60 @@ Let's imagine our commitment is a player's hidden location (x,y) data hashed usi
 
 ### client/src/index.ts
 
-This brings us finally to the module's client code. As above, we will go through the client code and highlight specific logic to cover all the requisite parts of writing client code in Gribi.
+This brings us finally to the module's client code. As above, we will go through the client code and comment on specific logic to cover all the requisite parts of writing client code in Gribi.
 <br/>
 <br/>
 
-The first thing to note is that we are defining this thing called a Precursor.
-```
+```typescript
+import { keccak256, toHex } from 'viem';
+import { 
+    Signal, 
+    Field,
+    Receptor,
+} from '@gribi/types';
+import { WitnessRelation, Precursor } from '@gribi/types';
+import { Utils } from "@gribi/vault";
+import { EVMRootSystem, StateUpdate, prove } from "@gribi/evm-rootsystem";
+import { CompiledCircuit } from '@noir-lang/backend_barretenberg';
+
+import CommitCheck from '../../circuits/commit/target/commit.json';
+
+export const MODULE_ID = BigInt(keccak256(toHex("example-module")));
+
+export type Commitment = string;
+export type CommitmentArgs = {
+    secret: Field,
+    salt: Field,
+}
+
+export type StoredCommitment = {
+    secret: Field[],
+    salt: Field[],
+}
+
+export type UpdateCommitmentArgs = {
+    relation: WitnessRelation<Commitment[], StoredCommitment>,
+    circuit?: CompiledCircuit,
+    secret: Field,
+    salt: Field,
+}
+
+/**
+ * A Precursor is a convenient structure for us to use client-side because it 
+ * bundles the claim (the commitment) with its secret parts (the witness). 
+ * 
+ * We don't use PCDs for this although would be much the same except instead 
+ * of a field called 'witness', it would be called 'proof' and would be the
+ * the trivial proof.
+ * 
+ * In order to draw a distinction between this client-side utility form and 
+ * regular PCDs which are meant to be federated, Gribi defines the Precursor 
+ * interface which takes a 'WitnessRelation' instead.
+ * 
+ * This CreateCommitment Precursor simply bundles together a commitment with 
+ * its witness: a salt and secret (the two values hashed together to create 
+ * the commitment).
+ */
 export class CreateCommitment implements Precursor<CommitmentArgs, Commitment[], StoredCommitment> {
     async bond(args: CommitmentArgs): Promise<WitnessRelation<Commitment[], StoredCommitment>> {
         const commitment = (await Utils.pedersenHash([args.salt as bigint, args.secret as bigint])).toString();
@@ -288,16 +345,24 @@ export class CreateCommitment implements Precursor<CommitmentArgs, Commitment[],
         }
     }
 }
-```
 
-A Precursor is a convenient structure for us to use client-side because it bundles the claim (the commitment) with its secret parts (the witness). Were we to use PCDs instead to formulate this relationship, the format would be much the same except instead of a field called witness, we would have a field called proof with the trivial proof (that is, the witness). In order to draw a distinction between this client-side utility form and regular PCDs which are meant to be federated, Gribi defines the Precursor interface.
+export class UpdateCommitment implements Precursor<UpdateCommitmentArgs, Commitment[], StoredCommitment> {
+    async bond(args: UpdateCommitmentArgs): Promise<WitnessRelation<Commitment[], StoredCommitment>> {
+        const commitment = (await Utils.pedersenHash([args.salt as bigint, args.secret as bigint])).toString();
+        return {
+            claim: [args.relation.claim.slice(-1)[0], commitment],
+            witness: {
+                secret: [args.relation.witness.secret.slice(-1)[0], args.secret],
+                salt: [args.relation.witness.salt.slice(-1)[0], args.salt]
+            }
+        }
+    }
+}
 
-Our CreateCommitment Precursor simply bundles together a commitment with its witness: a salt and secret (the two values hashed together to create the commitment).
-
-<br/>
-<br/>
-
-```
+/**
+ * The CreateCommitmentReceptor mostly is data munging the various bits
+ * of state on our client into a form factor necessary for the EVMRootSystem.
+ */ 
 export class CreateCommitmentReceptor implements Receptor<WitnessRelation<Commitment[], StoredCommitment>, StateUpdate> {
     async signal(args: WitnessRelation<Commitment[], StoredCommitment>): Promise<Signal<StateUpdate>> {
         let cc = CommitCheck as CompiledCircuit;
@@ -306,6 +371,11 @@ export class CreateCommitmentReceptor implements Receptor<WitnessRelation<Commit
             opid: 0,
             value: BigInt(args.claim.slice(-1)[0]),
         }];
+
+        // The only other concern beside data munging is to generate
+        // the proof. This proof just makes sure the commitment was 
+        // done correctly. You can see a sample of that circuit logic
+        // in the circuit/ folder.
         const proof = await prove(EVMRootSystem.walletAddress, cc, inputs, operations, {
             secret: args.witness.secret.toString(),
             salt: args.witness.salt.toString()
@@ -322,14 +392,70 @@ export class CreateCommitmentReceptor implements Receptor<WitnessRelation<Commit
         }
     }
 }
+
+export class UpdateCommitmentReceptor implements Receptor<UpdateCommitmentArgs, StateUpdate> {
+    async signal(args: UpdateCommitmentArgs): Promise<Signal<StateUpdate>> {
+        let cc = CommitCheck as CompiledCircuit;
+        const inputs = [Utils.EmptyInput()];
+        const operations = [
+            {
+                opid: 0,
+                value: BigInt(args.relation.claim[1]),
+                nullifier: BigInt(args.relation.claim[0]),
+            },
+        ];
+        const proof = await prove(EVMRootSystem.walletAddress, args.circuit || cc, inputs, operations, {
+            secret: args.secret.toString(),
+            salt: args.salt.toString()
+        })
+
+        return {
+            output: {
+                id: MODULE_ID,
+                method: 'updateCommitment',
+                inputs,
+                operations,
+                proof
+            }
+        }
+    }
+}
+
+export class RevealCommitment implements Receptor<WitnessRelation<Commitment[], StoredCommitment>, StateUpdate> {
+    async signal(args: WitnessRelation<Commitment[], StoredCommitment>): Promise<Signal<StateUpdate>> {
+        const commitment = args.claim.slice(-1)[0];
+        const secret = args.witness.secret.slice(-1)[0];
+        const salt = args.witness.salt.slice(-1)[0];
+        return {
+            output: {
+                id: MODULE_ID,
+                method: "revealCommitment",
+                inputs: [{
+                    slot: 0,
+                    value: commitment
+                }, {
+                    slot: 0,
+                    value: salt
+                }, {
+                    slot: 0,
+                    value: secret
+                }],
+                operations: [{
+                    opid: 0,
+                    nullifier: commitment
+                }]
+            }
+        }
+    }
+}
 ```
 
-Now that we have gone through both the contract and the circuit code, we can see all of these things come together in the client code.
 
-We form the PublicInputs and Operations. We create the proof using those inputs. Finally, we return a Signal\<StateUpdate\>. 
+<br/>
+
 
 That's it!
 
-But, where's our Transaction? How does this StateUpdate reach the contract? In order to understand that, we'll need to take a look at the [Using a Module in MUD]() tutorial.
+But, where's our Transaction actually made? How does this StateUpdate reach the contract? In order to understand that, we'll need to take a look at the [How to Use a Module in MUD](../../game/TUTORIAL.md) tutorial.
 
 

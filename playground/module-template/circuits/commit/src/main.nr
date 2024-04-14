@@ -14,9 +14,9 @@ struct Input {
 //Example signature of what a gribi module circuit looks like
 fn main(
 	// TODO: IDEALLY WE GET THESE ALL THROUGH ORACLE
-	// address: pub Field,
-	// inputs: pub [Input; 8],
-	// operations: pub [Operation; 8], //given 8 maximum, which seems like more than anyone would need
+	address: pub Field,
+	inputs: pub [Input; 8],
+	operations: pub [Operation; 8], //given 8 maximum, which seems like more than anyone would need
 
 	//I mean just in case for crazy shit we keep these???
 	// commitment_root: pub Field, 

@@ -1,5 +1,5 @@
 import { createSecretsState } from "@gribi/mud";
-import { CommitSelector } from "./Example";
+import { CommitSelector } from "./CommitUpdateReveal";
 
 export type SecretState = {
     example: {

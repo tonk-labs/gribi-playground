@@ -1,9 +1,6 @@
 [submodule "gribi"]
 	path = gribi
 	url = git@github.com:tonk-gg/gribi.git
-[submodule "playground/module/contracts/exmaple/lib/forge-std"]
+[submodule "playground/module-template/contracts/lib/forge-std"]
 	path = playground/module/contracts/exmaple/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
-[submodule "playground/module/contracts/lib/forge-std"]
-	path = playground/module/contracts/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std

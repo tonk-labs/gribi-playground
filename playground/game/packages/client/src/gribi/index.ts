@@ -1,10 +1,10 @@
-import * as _Example from './Example';
+import * as CUR from './CommitUpdateReveal';
 import { Module, NetworkCall } from '@gribi/mud';
 
-const Example: Module<_Example.ModuleCalls> = _Example; 
+const CommitUpdateReveal: Module<CUR.ModuleCalls> = CUR; 
 
-const Modules = [
-    Example
+const Modules = [ 
+    CommitUpdateReveal
 ];
 
 export default Modules;
