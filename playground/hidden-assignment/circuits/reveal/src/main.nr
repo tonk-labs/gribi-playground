@@ -29,7 +29,12 @@ fn main(
 ) {
 	// this means, most logic is on JS side
 	// the circuit logic just validates "correctness"
-	let commitment = operations[0].value.unwrap();
-	let commit = std::hash::pedersen_hash([commitment, randomness, 0, 0, 0, 0, 0]);
-	assert(commitment == commit);
+	let commitment = operations[0].nullifier.unwrap();
+	let onchain_rand = inputs[0].value.unwrap();
+	let index = operations[0].value.unwrap();
+	let computed_index = std::hash::pedersen_hash([randomness, onchain_rand, 0, 0, 0, 0, 0]);
+	let computed_commitment = std::hash::pedersen_hash([randomness]);
+
+	assert(computed_commitment == commitment);
+	assert(computed_index == index);
 }

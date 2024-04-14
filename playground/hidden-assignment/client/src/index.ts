@@ -10,6 +10,7 @@ import { EVMRootSystem, StateUpdate, prove } from "@gribi/evm-rootsystem";
 import { CompiledCircuit } from '@noir-lang/backend_barretenberg';
 
 import RandomnessCheck from '../../circuits/generate/target/generate.json';
+import RevealCheck from '../../circuits/reveal/target/reveal.json';
 
 export const MODULE_ID = BigInt(keccak256(toHex("hidden-assignment")));
 
@@ -70,24 +71,32 @@ export class RandomnessReceptor implements Receptor<WitnessRelation<Commitment, 
 
 export class RevealCommitment implements Receptor<WitnessRelation<Commitment, JointRandomness>, StateUpdate> {
     async signal(args: WitnessRelation<Commitment, JointRandomness>): Promise<Signal<StateUpdate>> {
+        let cc = RevealCheck as CompiledCircuit;
         const commitment = args.claim;
         const index = (await Utils.pedersenHash([args.witness.myRandom as bigint, args.witness.chainRandom as bigint])).toString();
 
+        const inputs = [{
+            slot: args.witness.commitmentKey,
+            value: args.witness.chainRandom
+        }];
+        const operations = [{
+            opid: 0,
+            value: index,
+            nullifier: commitment
+        }]
+
         //Generate proof for the reveal here
+        const proof = await prove(EVMRootSystem.walletAddress, cc, inputs, operations, {
+            randomness: args.witness.myRandom.toString()
+        });
 
         return {
             output: {
                 id: MODULE_ID,
                 method: "reveal",
-                inputs: [{
-                    slot: args.witness.commitmentKey,
-                    value: args.witness.chainRandom
-                }],
-                operations: [{
-                    opid: 0,
-                    value: index,
-                    nullifier: commitment
-                }]
+                inputs,
+                operations,
+                proof
             }
         }
     }
