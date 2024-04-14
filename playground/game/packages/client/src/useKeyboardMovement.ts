@@ -1,28 +1,29 @@
 import { useEffect } from "react";
 import { useMUD } from "./MUDContext";
+import { Direction } from "./direction";
 
 export const useKeyboardMovement = () => {
   const {
-    systemCalls: { moveBy },
+    systemCalls: { move },
   } = useMUD();
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
       if (e.key === "ArrowUp") {
-        moveBy(0, -1);
+        move(Direction.North);
       }
       if (e.key === "ArrowDown") {
-        moveBy(0, 1);
+        move(Direction.South);
       }
       if (e.key === "ArrowLeft") {
-        moveBy(-1, 0);
+        move(Direction.West);
       }
       if (e.key === "ArrowRight") {
-        moveBy(1, 0);
+        move(Direction.East);
       }
     };
 
     window.addEventListener("keydown", listener);
     return () => window.removeEventListener("keydown", listener);
-  }, [moveBy]);
+  }, [move]);
 };

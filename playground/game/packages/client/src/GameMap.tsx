@@ -31,7 +31,6 @@ export const GameMap = ({
 }: Props) => {
   const {
     network: { playerEntity },
-    systemCalls: { createCommitment } 
   } = useMUD();
 
   const rows = new Array(width).fill(0).map((_, i) => i);
@@ -100,10 +99,6 @@ export const GameMap = ({
           );
         })
       )}
-
-      <div className="w-h h-8 flex items-center justify-center bg-blue-500" style={{ gridColumnStart: width - 1, gridRowStart: height - 1 }}
-        onClick={() => createCommitment(1)}
-        >TEST</div>
 
       {encounter && showEncounter ? (
         <div

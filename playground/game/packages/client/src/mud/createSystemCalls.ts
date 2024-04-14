@@ -1,134 +1,154 @@
 import { Has, HasValue, getComponentValue, runQuery } from "@latticexyz/recs";
+import { singletonEntity } from "@latticexyz/store-sync/recs";
+import { uuid } from "@latticexyz/utils";
 import { ClientComponents } from "./createClientComponents";
 import { SetupNetworkResult } from "./setupNetwork";
-import { singletonEntity } from "@latticexyz/store-sync/recs";
-import { NetworkCall, Module } from "@gribi/mud"; 
-import { Transaction } from "@gribi/evm-rootsystem";
-export type SystemCalls = ReturnType<typeof createSystemCalls>;
+import { Direction } from "../direction";
+import { MonsterCatchResult } from "../monsterCatchResult";
 
-import Modules from "../gribi";
+export type SystemCalls = ReturnType<typeof createSystemCalls>;
 
 export function createSystemCalls(
   { playerEntity, worldContract, waitForTransaction }: SetupNetworkResult,
-  { Encounter, MapConfig, MonsterCatchAttempt, Obstruction, Player, Position }: ClientComponents
+  {
+    Encounter,
+    MapConfig,
+    MonsterCatchAttempt,
+    Obstruction,
+    Player,
+    Position,
+  }: ClientComponents
 ) {
-
-    /**
-   * GRIBI Stuff
-   */
-  const registerModules = async () => {
-    const tx = await worldContract.write.registerModules(['0x5424592c50E08DF0023b3ffFdb396670643274CE']);
-    await waitForTransaction(tx);
-  }
-
-  const mudCall: NetworkCall = async (transaction: Transaction) => {
-    let tx;
-    if (transaction.proof) {
-      // tx = await worldContract.write.execute([transaction.id, transaction.data, transaction.proof.data]);
-      // proofs are turned off until KernelCircuit is done
-      tx = await worldContract.write.execute([transaction.id as bigint, transaction.data]);
-    } else {
-      tx = await worldContract.write.execute([transaction.id as bigint, transaction.data]);
-    }
-    await waitForTransaction(tx);
-  };
-
-
-  /**
-   * Here's the rest of your SystemCall Code 
-   */
-
   const wrapPosition = (x: number, y: number) => {
     const mapConfig = getComponentValue(MapConfig, singletonEntity);
     if (!mapConfig) {
       throw new Error("mapConfig no yet loaded or initialized");
     }
-    return [(x + mapConfig.width) % mapConfig.width, (y + mapConfig.height) % mapConfig.height];
+    return [
+      (x + mapConfig.width) % mapConfig.width,
+      (y + mapConfig.height) % mapConfig.height,
+    ];
   };
- 
+
   const isObstructed = (x: number, y: number) => {
     return runQuery([Has(Obstruction), HasValue(Position, { x, y })]).size > 0;
   };
- 
-  const moveBy = async (deltaX: number, deltaY: number) => {
+
+  const move = async (direction: Direction) => {
     if (!playerEntity) {
       throw new Error("no player");
     }
- 
-    const inEncounter = !!getComponentValue(Encounter, playerEntity);
-    if (inEncounter) throw new error("cannot move during encounter");
- 
-    const playerPosition = getComponentValue(Position, playerEntity);
-    if (!playerPosition) {
-      console.warn("cannot moveBy without a player position, not yet spawned?");
+
+    const position = getComponentValue(Position, playerEntity);
+    if (!position) {
+      console.warn("cannot move without a player position, not yet spawned?");
       return;
     }
- 
-    let newX = playerPosition.x + deltaX;
-    let newY = playerPosition.y + deltaY;
-    [newX, newY] = wrapPosition(newX, newY);
- 
-    if (isObstructed(newX, newY)) throw new Error("cannot go into an obstructed space");
- 
-    const tx = await worldContract.write.moveBy([playerPosition.x, playerPosition.y, deltaX, deltaY]);
-    await waitForTransaction(tx);
+
+    const inEncounter = !!getComponentValue(Encounter, playerEntity);
+    if (inEncounter) {
+      console.warn("cannot move while in encounter");
+      return;
+    }
+
+    let { x: inputX, y: inputY } = position;
+    if (direction === Direction.North) {
+      inputY -= 1;
+    } else if (direction === Direction.East) {
+      inputX += 1;
+    } else if (direction === Direction.South) {
+      inputY += 1;
+    } else if (direction === Direction.West) {
+      inputX -= 1;
+    }
+
+    const [x, y] = wrapPosition(inputX, inputY);
+    if (isObstructed(x, y)) {
+      console.warn("cannot move to obstructed space");
+      return;
+    }
+
+    const positionId = uuid();
+    Position.addOverride(positionId, {
+      entity: playerEntity,
+      value: { x, y },
+    });
+
+    try {
+      const tx = await worldContract.write.move([direction]);
+      await waitForTransaction(tx);
+    } finally {
+      Position.removeOverride(positionId);
+    }
   };
- 
-  const spawn = async (x: number, y: number) => {
+
+  const spawn = async (inputX: number, inputY: number) => {
     if (!playerEntity) {
       throw new Error("no player");
     }
- 
+
     const canSpawn = getComponentValue(Player, playerEntity)?.value !== true;
     if (!canSpawn) {
       throw new Error("already spawned");
     }
- 
-    [x, y] = wrapPosition(x, y);
- 
+
+    const [x, y] = wrapPosition(inputX, inputY);
     if (isObstructed(x, y)) {
       console.warn("cannot spawn on obstructed space");
       return;
     }
- 
-    const tx = await worldContract.write.spawn([x, y]);
-    await waitForTransaction(tx);
+
+    const positionId = uuid();
+    Position.addOverride(positionId, {
+      entity: playerEntity,
+      value: { x, y },
+    });
+    const playerId = uuid();
+    Player.addOverride(playerId, {
+      entity: playerEntity,
+      value: { value: true },
+    });
+
+    try {
+      const tx = await worldContract.write.spawn([x, y]);
+      await waitForTransaction(tx);
+    } finally {
+      Position.removeOverride(positionId);
+      Player.removeOverride(playerId);
+    }
   };
- 
+
   const throwBall = async () => {
     const player = playerEntity;
     if (!player) {
       throw new Error("no player");
     }
- 
+
     const encounter = getComponentValue(Encounter, player);
     if (!encounter) {
       throw new Error("no encounter");
     }
- 
-    const tx = await worldContract.write.throwBall([]);
+
+    const tx = await worldContract.write.throwBall();
     await waitForTransaction(tx);
- 
+
     const catchAttempt = getComponentValue(MonsterCatchAttempt, player);
     if (!catchAttempt) {
       throw new Error("no catch attempt found");
     }
- 
+
     return catchAttempt.result as MonsterCatchResult;
   };
- 
+
   const fleeEncounter = async () => {
-    const tx = await worldContract.write.flee([]);
+    const tx = await worldContract.write.flee();
     await waitForTransaction(tx);
   };
- 
+
   return {
-    registerModules,
-    moveBy,
+    move,
     spawn,
     throwBall,
     fleeEncounter,
-    ...combineGribiModuleCalls(Modules, mudCall),
   };
 }
-

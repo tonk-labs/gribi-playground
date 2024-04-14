@@ -6,12 +6,12 @@ import "forge-std/console.sol";
 import { MudTest } from "@latticexyz/world/test/MudTest.t.sol";
 
 import { IWorld } from "../src/codegen/world/IWorld.sol";
-import { Gribi } from "@gribi/src/Gribi.sol";
-import { PublicInput, Operation, Transaction } from "@gribi/src/Structs.sol";
+import { EVMRootSystem } from "@gribi/evm-rootsystem/EVMRootSystem.sol";
+import { PublicInput, Operation, Transaction } from "@gribi/evm-rootsystem/Structs.sol";
 import { GribiConfig } from "../src/codegen/index.sol";
 
 
-contract GribiTests is MudTest {
+contract GribiSystemTest is MudTest {
 
   function testWorldExists() public {
     uint256 codeSize;
@@ -23,11 +23,10 @@ contract GribiTests is MudTest {
   }
 
   function testGribi() public {
-    Gribi gribi = new Gribi(keccak256(abi.encodePacked("1.0.0")));
-    // GribiConfig.set(address(gribi));
+    EVMRootSystem rootSys = new EVMRootSystem(keccak256(abi.encodePacked("0.0.0")));
 
-    IWorld(worldAddress).registerModules(address(gribi));
-    IWorld(worldAddress).setGribiAddress(address(gribi));
+    IWorld(worldAddress).setRootSystemAddress(address(rootSys));
+    IWorld(worldAddress).registerModules();
     // // Expect task to exist that we created during PostDeploy script
     // TasksData memory task = Tasks.get("1");
     // assertEq(task.description, "Walk the dog");

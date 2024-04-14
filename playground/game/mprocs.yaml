@@ -9,4 +9,3 @@ procs:
     cwd: packages/contracts
     shell: sleep 1 && pnpm run deploy:gribi
     autostart: true
-

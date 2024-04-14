@@ -3,15 +3,13 @@ pragma solidity ^0.8.4;
 
 import { System } from "@latticexyz/world/src/System.sol";
 import { GribiConfig } from "../codegen/index.sol";
-import { Gribi } from "@gribi/evm-rootsystem/Gribi.sol";
+import { EVMRootSystem } from "@gribi/evm-rootsystem/EVMRootSystem.sol";
 import { Operation, PublicInput, Proof, Transaction } from "@gribi/evm-rootsystem/Structs.sol";
 import { BaseThread, UpdateRegister } from "@gribi/evm-rootsystem/BaseThread.sol";
 import { Forest } from "@gribi/evm-rootsystem/Forest.sol";
 import { addressToEntityKey } from "../addressToEntityKey.sol";
 
-import { Example } from "../gribi/Example.sol"; 
-import { MapSystem } from "./MapSystem.sol";
-
+import { Example } from "example-commit-update-reveal/Example.sol"; 
 
 contract GribiSystem is System {
     event Log(string message);
@@ -21,17 +19,17 @@ contract GribiSystem is System {
     constructor() {
     }
 
-    function setGribiAddress(address gribiAddress) public {
-        GribiConfig.set(gribiAddress);
+    function setRootSystemAddress(address rootSystemAddress) public {
+        GribiConfig.set(rootSystemAddress);
     }
 
-    function registerModules(address gribiAddress) public {
-        Gribi gribi = Gribi(gribiAddress);
+    function registerModules() public {
+        EVMRootSystem rs = EVMRootSystem(GribiConfig.get());
         BaseThread[] memory threads = new BaseThread[](1);
 
         //TODO: Register your module here
         threads[0] = new Example();
-        gribi.registerThreads(threads);
+        rs.registerThreads(threads);
     }
 
     function handleReturnValues(BaseThread thread) private {
@@ -53,14 +51,14 @@ contract GribiSystem is System {
     }
 
     function execute(uint256 id, bytes memory data) public {
-        Gribi gribi = Gribi(address(GribiConfig.get()));
-        BaseThread thread = gribi.execute(id, data);
+        EVMRootSystem rs = EVMRootSystem(address(GribiConfig.get()));
+        BaseThread thread = rs.execute(id, data);
         handleReturnValues(thread);
     }
 
     function execute(uint256 id, bytes memory data, Proof memory proof) public {
-        Gribi gribi = Gribi(address(GribiConfig.get()));
-        BaseThread thread = gribi.execute(id, data);
+        EVMRootSystem rs = EVMRootSystem(address(GribiConfig.get()));
+        BaseThread thread = rs.execute(id, data);
         handleReturnValues(thread);
     }
 

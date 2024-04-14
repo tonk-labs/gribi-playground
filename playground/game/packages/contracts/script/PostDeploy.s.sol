@@ -1,26 +1,29 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.21;
- 
+pragma solidity >=0.8.24;
+
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
-import { TerrainType } from "../src/codegen/common.sol";
 import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
+
+import { IWorld } from "../src/codegen/world/IWorld.sol";
 import { EncounterTrigger, MapConfig, GribiConfig, Obstruction, Position } from "../src/codegen/index.sol";
+import { TerrainType } from "../src/codegen/common.sol";
 import { positionToEntityKey } from "../src/positionToEntityKey.sol";
-import { IWorld } from "../src/codegen/IWorld.sol";
 
 contract PostDeploy is Script {
   function run(address worldAddress) external {
-    console.log("Deployed world: ", worldAddress);
- 
-    uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-    vm.startBroadcast(deployerPrivateKey);
+    // Specify a store so that you can use tables directly in PostDeploy
     StoreSwitch.setStoreAddress(worldAddress);
- 
+
+    // Load the private key from the `PRIVATE_KEY` environment variable (in .env)
+    uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+
+    vm.startBroadcast(deployerPrivateKey);
+
     TerrainType O = TerrainType.None;
     TerrainType T = TerrainType.TallGrass;
     TerrainType B = TerrainType.Boulder;
- 
+
     TerrainType[20][20] memory map = [
       [O, O, O, O, O, O, T, O, O, O, O, O, O, O, O, O, O, O, O, O],
       [O, O, T, O, O, O, O, O, T, O, O, O, O, B, O, O, O, O, O, O],
@@ -43,37 +46,36 @@ contract PostDeploy is Script {
       [O, O, O, T, T, T, T, O, O, O, O, T, O, O, O, T, O, O, O, O],
       [O, O, O, O, O, T, O, O, O, O, O, O, O, O, O, O, O, O, O, O]
     ];
- 
+
     uint32 height = uint32(map.length);
     uint32 width = uint32(map[0].length);
     bytes memory terrain = new bytes(width * height);
- 
-    for (uint32 y = 0; y < height; y++) {
-      for (uint32 x = 0; x < width; x++) {
-        TerrainType terrainType = map[y][x];
-        if (terrainType == TerrainType.None) continue;
- 
-        terrain[(y * width) + x] = bytes1(uint8(terrainType));
- 
-        bytes32 entity = positionToEntityKey(x, y);
-        if (terrainType == TerrainType.Boulder) {
-          Position.set(entity, x, y);
-          Obstruction.set(entity, true);
-        } else if (terrainType == TerrainType.TallGrass) {
-          Position.set(entity, x, y);
-          EncounterTrigger.set(entity, true);
-        }
-      }
-    }
- 
+
+    // for (uint32 y = 0; y < height; y++) {
+    //   for (uint32 x = 0; x < width; x++) {
+    //     TerrainType terrainType = map[y][x];
+    //     if (terrainType == TerrainType.None) continue;
+
+    //     terrain[(y * width) + x] = bytes1(uint8(terrainType));
+
+    //     bytes32 entity = positionToEntityKey(int32(x), int32(y));
+    //     if (terrainType == TerrainType.Boulder) {
+    //       Position.set(entity, int32(x), int32(y));
+    //       Obstruction.set(entity, true);
+    //     } else if (terrainType == TerrainType.TallGrass) {
+    //       Position.set(entity, int32(x), int32(y));
+    //       EncounterTrigger.set(entity, true);
+    //     }
+    //   }
+    // }
+
     MapConfig.set(width, height, terrain);
-    
+
     //SETUP GRIBI
-    GribiConfig.set(address(0x5424592c50E08DF0023b3ffFdb396670643274CE));
+    GribiConfig.set(address(0xD8163ADc3169d7dab93fe9858F9cEaEBaD7f7845));
     // need to test if this works
     IWorld(worldAddress).registerModules();
 
     vm.stopBroadcast();
   }
 }
-

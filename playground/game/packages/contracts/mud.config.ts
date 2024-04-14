@@ -1,64 +1,70 @@
-import { mudConfig } from "@latticexyz/world/register";
- 
-export default mudConfig({
+import { defineWorld } from "@latticexyz/world";
+
+export default defineWorld({
   enums: {
+    Direction: ["North", "East", "South", "West"],
     MonsterCatchResult: ["Missed", "Caught", "Fled"],
     MonsterType: ["None", "Eagle", "Rat", "Caterpillar"],
     TerrainType: ["None", "TallGrass", "Boulder"],
   },
   tables: {
     Encounter: {
-      keySchema: {
+      schema: {
         player: "bytes32",
-      },
-      valueSchema: {
         exists: "bool",
         monster: "bytes32",
         catchAttempts: "uint256",
       },
+      key: ["player"],
     },
     EncounterTrigger: "bool",
     Encounterable: "bool",
     MapConfig: {
-      keySchema: {},
-      dataStruct: false,
-      valueSchema: {
+      schema: {
         width: "uint32",
         height: "uint32",
         terrain: "bytes",
       },
+      key: [],
+      codegen: {
+        dataStruct: false,
+      },
     },
     MonsterCatchAttempt: {
-      ephemeral: true,
-      dataStruct: false,
-      keySchema: {
+      type: "offchainTable",
+      schema: {
         encounter: "bytes32",
-      },
-      valueSchema: {
         result: "MonsterCatchResult",
       },
+      key: ["encounter"],
+      codegen: {
+        dataStruct: false,
+      },
     },
-    Secrets: "uint256",
+    GribiConfig: {
+      key: [],
+      schema: {
+        contractAddress: "address",
+      },
+      codegen: {
+        dataStruct: false
+      },
+    },
     Monster: "MonsterType",
     Movable: "bool",
     Obstruction: "bool",
-    GribiConfig: {
-      keySchema: {},
-      dataStruct: false,
-      valueSchema: {
-        contractAddress: "address",
-      }
-    },
     OwnedBy: "bytes32",
     Player: "bool",
     Position: {
-      dataStruct: false,
-      valueSchema: {
-        x: "uint32",
-        y: "uint32",
+      schema: {
+        id: "bytes32",
+        x: "int32",
+        y: "int32",
+      },
+      key: ["id"],
+      codegen: {
+        dataStruct: false,
       },
     },
   },
 });
-
-

@@ -12,14 +12,14 @@
     "test": "pnpm recursive run test"
   },
   "devDependencies": {
-    "@latticexyz/cli": "2.0.0-next.16",
-    "@typescript-eslint/eslint-plugin": "5.46.1",
-    "@typescript-eslint/parser": "5.46.1",
-    "concurrently": "^8.0.1",
-    "eslint": "8.29.0",
+    "@latticexyz/cli": "2.0.1",
+    "@types/debug": "4.1.7",
+    "@typescript-eslint/eslint-plugin": "7.1.1",
+    "@typescript-eslint/parser": "7.1.1",
+    "eslint": "8.57.0",
+    "mprocs": "^0.6.4",
     "rimraf": "^3.0.2",
-    "typescript": "5.1.6",
-    "mprocs": "^0.6.4"
+    "typescript": "5.4.2"
   },
   "engines": {
     "node": "18.x",
