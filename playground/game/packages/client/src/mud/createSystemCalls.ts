@@ -5,6 +5,10 @@ import { ClientComponents } from "./createClientComponents";
 import { SetupNetworkResult } from "./setupNetwork";
 import { Direction } from "../direction";
 import { MonsterCatchResult } from "../monsterCatchResult";
+import { NetworkCall, combineGribiModuleCalls } from "@gribi/mud";
+import { Transaction } from "@gribi/evm-rootsystem";
+
+import Modules from "../gribi";
 
 export type SystemCalls = ReturnType<typeof createSystemCalls>;
 
@@ -19,6 +23,29 @@ export function createSystemCalls(
     Position,
   }: ClientComponents
 ) {
+
+
+  /**
+ * GRIBI Stuff
+ */
+  const registerModules = async () => {
+    const tx = await worldContract.write.registerModules(['0x5424592c50E08DF0023b3ffFdb396670643274CE']);
+    await waitForTransaction(tx);
+  }
+
+  const mudCall: NetworkCall = async (transaction: Transaction) => {
+    let tx;
+    if (transaction.proof) {
+      // tx = await worldContract.write.execute([transaction.id, transaction.data, transaction.proof.data]);
+      // proofs are turned off until KernelCircuit is done
+      tx = await worldContract.write.execute([transaction.id as bigint, transaction.data]);
+    } else {
+      tx = await worldContract.write.execute([transaction.id as bigint, transaction.data]);
+    }
+    await waitForTransaction(tx);
+  };
+
+
   const wrapPosition = (x: number, y: number) => {
     const mapConfig = getComponentValue(MapConfig, singletonEntity);
     if (!mapConfig) {
@@ -150,5 +177,6 @@ export function createSystemCalls(
     spawn,
     throwBall,
     fleeEncounter,
+    ...combineGribiModuleCalls(Modules, mudCall)
   };
 }
