@@ -9,8 +9,8 @@ import { Utils } from "@gribi/vault";
 import { EVMRootSystem, StateUpdate, prove } from "@gribi/evm-rootsystem";
 import { CompiledCircuit } from '@noir-lang/backend_barretenberg';
 
-import RandomnessCheck from '../../circuits/generate/target/generate.json';
-import RevealCheck from '../../circuits/reveal/target/reveal.json';
+// import RandomnessCheck from '../../circuits/generate/target/generate.json';
+// import RevealCheck from '../../circuits/reveal/target/reveal.json';
 
 export const MODULE_ID = BigInt(keccak256(toHex("hidden-assignment")));
 
@@ -22,7 +22,7 @@ export type JointRandomness = {
 }
 
 export type StoredCommitment = {
-    randomness: Field,
+    randomness: string,
 }
 
 export type UpdateCommitmentArgs = {
@@ -34,12 +34,12 @@ export type UpdateCommitmentArgs = {
 
 export class CreateRandomness implements Precursor<undefined, Commitment, StoredCommitment> {
     async bond(args: undefined): Promise<WitnessRelation<Commitment, StoredCommitment>> {
-        const randomness = Utils.rng() as bigint;
-        const commitment = (await Utils.pedersenHash([randomness as bigint])).toString();
+        const randomness = Utils.rng();
+        const commitment = (await Utils.keccak([randomness as bigint])).toString();
         return {
             claim: commitment.toString(),
             witness: {
-                randomness, 
+                randomness: randomness.toString(), 
             }
         }
     }
@@ -47,15 +47,18 @@ export class CreateRandomness implements Precursor<undefined, Commitment, Stored
 
 export class RandomnessReceptor implements Receptor<WitnessRelation<Commitment, StoredCommitment>, StateUpdate> {
     async signal(args: WitnessRelation<Commitment, StoredCommitment>): Promise<Signal<StateUpdate>> {
-        let cc = RandomnessCheck as CompiledCircuit;
+        // let cc = RandomnessCheck as CompiledCircuit;
         const inputs =  [Utils.EmptyInput()];
         const operations = [{
             opid: 0,
             value: BigInt(args.claim),
+            nullifer: 0,
         }];
-        const proof = await prove(EVMRootSystem.walletAddress, cc, inputs, operations, {
-            randomness: args.witness.randomness.toString()
-        });
+
+        // Disbaling because of build errors
+        // const proof = await prove(EVMRootSystem.walletAddress, cc, inputs, operations, {
+        //     randomness: args.witness.randomness.toString()
+        // });
 
         return {
             output: {
@@ -63,7 +66,7 @@ export class RandomnessReceptor implements Receptor<WitnessRelation<Commitment, 
                 method: 'generate',
                 inputs,
                 operations,
-                proof
+                // proof
             }
         }
     }
@@ -71,9 +74,9 @@ export class RandomnessReceptor implements Receptor<WitnessRelation<Commitment, 
 
 export class RevealCommitment implements Receptor<WitnessRelation<Commitment, JointRandomness>, StateUpdate> {
     async signal(args: WitnessRelation<Commitment, JointRandomness>): Promise<Signal<StateUpdate>> {
-        let cc = RevealCheck as CompiledCircuit;
+        // let cc = RevealCheck as CompiledCircuit;
         const commitment = args.claim;
-        const index = (await Utils.pedersenHash([args.witness.myRandom as bigint, args.witness.chainRandom as bigint])).toString();
+        const index = (await Utils.keccak([args.witness.myRandom as bigint, args.witness.chainRandom as bigint])).toString();
 
         const inputs = [{
             slot: args.witness.commitmentKey,
@@ -85,10 +88,12 @@ export class RevealCommitment implements Receptor<WitnessRelation<Commitment, Jo
             nullifier: commitment
         }]
 
+        // Disabling because of build errors
+
         //Generate proof for the reveal here
-        const proof = await prove(EVMRootSystem.walletAddress, cc, inputs, operations, {
-            randomness: args.witness.myRandom.toString()
-        });
+        // const proof = await prove(EVMRootSystem.walletAddress, cc, inputs, operations, {
+        //     randomness: args.witness.myRandom.toString()
+        // });
 
         return {
             output: {
@@ -96,7 +101,7 @@ export class RevealCommitment implements Receptor<WitnessRelation<Commitment, Jo
                 method: "reveal",
                 inputs,
                 operations,
-                proof
+                // proof
             }
         }
     }

@@ -37,7 +37,7 @@ export type UpdateCommitmentArgs = {
 
 export class CreateCommitment implements Precursor<CommitmentArgs, Commitment[], StoredCommitment> {
     async bond(args: CommitmentArgs): Promise<WitnessRelation<Commitment[], StoredCommitment>> {
-        const commitment = (await Utils.pedersenHash([args.salt as bigint, args.secret as bigint])).toString();
+        const commitment = (await Utils.keccak([args.salt as bigint, args.secret as bigint])).toString();
         return {
             claim: [commitment.toString()],
             witness: {

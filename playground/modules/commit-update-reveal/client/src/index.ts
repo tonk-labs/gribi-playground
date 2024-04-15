@@ -9,7 +9,7 @@ import { Utils } from "@gribi/vault";
 import { EVMRootSystem, StateUpdate, prove } from "@gribi/evm-rootsystem";
 import { CompiledCircuit } from '@noir-lang/backend_barretenberg';
 
-import CommitCheck from '../../circuits/commit/target/commit.json';
+// import CommitCheck from '../../circuits/commit/target/commit.json';
 
 export const MODULE_ID = BigInt(keccak256(toHex("example-module")));
 
@@ -20,8 +20,8 @@ export type CommitmentArgs = {
 }
 
 export type StoredCommitment = {
-    secret: Field[],
-    salt: Field[],
+    secret: string[],
+    salt: string[],
 }
 
 export type UpdateCommitmentArgs = {
@@ -33,12 +33,12 @@ export type UpdateCommitmentArgs = {
 
 export class CreateCommitment implements Precursor<CommitmentArgs, Commitment[], StoredCommitment> {
     async bond(args: CommitmentArgs): Promise<WitnessRelation<Commitment[], StoredCommitment>> {
-        const commitment = (await Utils.pedersenHash([args.salt as bigint, args.secret as bigint])).toString();
+        const commitment = (await Utils.keccak([args.salt as bigint, args.secret as bigint])).toString();
         return {
             claim: [commitment.toString()],
             witness: {
-                secret: [args.secret],
-                salt: [args.salt]
+                secret: [args.secret.toString()],
+                salt: [args.salt.toString()]
             }
         }
     }
@@ -46,12 +46,12 @@ export class CreateCommitment implements Precursor<CommitmentArgs, Commitment[],
 
 export class UpdateCommitment implements Precursor<UpdateCommitmentArgs, Commitment[], StoredCommitment> {
     async bond(args: UpdateCommitmentArgs): Promise<WitnessRelation<Commitment[], StoredCommitment>> {
-        const commitment = (await Utils.pedersenHash([args.salt as bigint, args.secret as bigint])).toString();
+        const commitment = (await Utils.keccak([args.salt as bigint, args.secret as bigint])).toString();
         return {
             claim: [args.relation.claim.slice(-1)[0], commitment],
             witness: {
-                secret: [args.relation.witness.secret.slice(-1)[0], args.secret],
-                salt: [args.relation.witness.salt.slice(-1)[0], args.salt]
+                secret: [args.relation.witness.secret.slice(-1)[0], args.secret.toString()],
+                salt: [args.relation.witness.salt.slice(-1)[0], args.salt.toString()]
             }
         }
     }
@@ -59,16 +59,18 @@ export class UpdateCommitment implements Precursor<UpdateCommitmentArgs, Commitm
 
 export class CreateCommitmentReceptor implements Receptor<WitnessRelation<Commitment[], StoredCommitment>, StateUpdate> {
     async signal(args: WitnessRelation<Commitment[], StoredCommitment>): Promise<Signal<StateUpdate>> {
-        let cc = CommitCheck as CompiledCircuit;
+        // let cc = CommitCheck as CompiledCircuit;
         const inputs =  [Utils.EmptyInput()];
         const operations = [{
             opid: 0,
             value: BigInt(args.claim.slice(-1)[0]),
         }];
-        const proof = await prove(EVMRootSystem.walletAddress, cc, inputs, operations, {
-            secret: args.witness.secret.toString(),
-            salt: args.witness.salt.toString()
-        });
+
+        // Disabling because of build errors
+        // const proof = await prove(EVMRootSystem.walletAddress, cc, inputs, operations, {
+        //     secret: args.witness.secret.toString(),
+        //     salt: args.witness.salt.toString()
+        // });
 
         return {
             output: {
@@ -76,7 +78,7 @@ export class CreateCommitmentReceptor implements Receptor<WitnessRelation<Commit
                 method: 'createCommitment',
                 inputs,
                 operations,
-                proof
+                // proof
             }
         }
     }
@@ -84,7 +86,7 @@ export class CreateCommitmentReceptor implements Receptor<WitnessRelation<Commit
 
 export class UpdateCommitmentReceptor implements Receptor<UpdateCommitmentArgs, StateUpdate> {
     async signal(args: UpdateCommitmentArgs): Promise<Signal<StateUpdate>> {
-        let cc = CommitCheck as CompiledCircuit;
+        // let cc = CommitCheck as CompiledCircuit;
         const inputs = [Utils.EmptyInput()];
         const operations = [
             {
@@ -93,10 +95,12 @@ export class UpdateCommitmentReceptor implements Receptor<UpdateCommitmentArgs, 
                 nullifier: BigInt(args.relation.claim[0]),
             },
         ];
-        const proof = await prove(EVMRootSystem.walletAddress, args.circuit || cc, inputs, operations, {
-            secret: args.secret.toString(),
-            salt: args.salt.toString()
-        })
+
+        // Disabling because of build errors
+        // const proof = await prove(EVMRootSystem.walletAddress, args.circuit || cc, inputs, operations, {
+        //     secret: args.secret.toString(),
+        //     salt: args.salt.toString()
+        // })
 
         return {
             output: {
@@ -104,7 +108,7 @@ export class UpdateCommitmentReceptor implements Receptor<UpdateCommitmentArgs, 
                 method: 'updateCommitment',
                 inputs,
                 operations,
-                proof
+                // proof
             }
         }
     }
@@ -124,10 +128,10 @@ export class RevealCommitment implements Receptor<WitnessRelation<Commitment[], 
                     value: commitment
                 }, {
                     slot: 0,
-                    value: salt
+                    value: BigInt(salt)
                 }, {
                     slot: 0,
-                    value: secret
+                    value: BigInt(secret)
                 }],
                 operations: [{
                     opid: 0,

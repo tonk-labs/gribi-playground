@@ -26,12 +26,12 @@ export function createModuleCalls(call: NetworkCall) {
 
         const entry = {
             slot: 0,
-            value: witness
+            value: witness.toString() 
         }
 
         const signal = await new CreateCommitmentReceptor().signal(witness);
         const txs = await EVMRootSystem.createTxs([signal]);
-        await Promise.all(txs.map(async (tx) => await call(tx)));
+        await Promise.all(txs.map(async (tx: any) => await call(tx)));
         Vault.setEntry(EVMRootSystem.walletAddress, MODULE_ID.toString(), entry);
     }
 
@@ -50,9 +50,9 @@ export function createModuleCalls(call: NetworkCall) {
             salt
         });
 
-        entry.value = witness;
+        entry.value = witness.toString();
         const txs = await EVMRootSystem.createTxs([signal]);
-        await Promise.all(txs.map(async (tx) => await call(tx)));
+        await Promise.all(txs.map(async (tx: any) => await call(tx)));
         Vault.setEntry(EVMRootSystem.walletAddress, MODULE_ID.toString(), entry);
     }
 
@@ -60,7 +60,7 @@ export function createModuleCalls(call: NetworkCall) {
         const entry = Vault.getDataAtSlot(EVMRootSystem.walletAddress, MODULE_ID.toString(), 0) as PrivateEntry<WitnessRelation<Commitment[], StoredCommitment>>;
         const signal = await new RevealCommitment().signal(entry.value);
         const txs = await EVMRootSystem.createTxs([signal]);
-        await Promise.all(txs.map(async (tx) => await call(tx)));
+        await Promise.all(txs.map(async (tx: any) => await call(tx)));
         Vault.removeEntry(EVMRootSystem.walletAddress, MODULE_ID.toString(), entry);
     }
 

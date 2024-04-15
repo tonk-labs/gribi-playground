@@ -11,6 +11,10 @@
     "test": "tsc --noEmit"
   },
   "dependencies": {
+    "@gribi/evm-rootsystem": "../../../../gribi/packages/evm-rootsystem/packages/client",
+    "@gribi/mud": "../../../../gribi/packages/mud-integration/packages/client",
+    "@gribi/types": "../../../../gribi/packages/types",
+    "@gribi/vault": "../../../../gribi/packages/vault",
     "@latticexyz/common": "2.0.1",
     "@latticexyz/dev-tools": "2.0.1",
     "@latticexyz/react": "2.0.1",
@@ -20,17 +24,14 @@
     "@latticexyz/store-sync": "2.0.1",
     "@latticexyz/utils": "2.0.1",
     "@latticexyz/world": "2.0.1",
-    "@gribi/evm-rootsystem": "../../../../gribi/packages/evm-rootsystem/packages/client",
-    "@gribi/mud": "../../../../gribi/packages/mud-integration/packages/client",
-    "@gribi/types": "../../../../gribi/packages/types",
-    "@gribi/vault": "../../../../gribi/packages/vault",
+    "@noir-lang/acvm_js": "^0.43.0",
     "@noir-lang/backend_barretenberg": "^0.23.0",
     "@noir-lang/noir_js": "^0.23.0",
     "@noir-lang/noirc_abi": "^0.23.0",
     "backend-barretenberg,": "link:@noir-lang/backend-barretenberg,",
     "commit-update-reveal": "../../../modules/commit-update-reveal/client",
-    "noir_js,": "link:@noir-lang/noir_js,",
     "contracts": "workspace:*",
+    "noir_js,": "link:@noir-lang/noir_js,",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-toastify": "^9.1.2",
@@ -40,7 +41,6 @@
   },
   "devDependencies": {
     "@babel/plugin-syntax-top-level-await": "^7.14.5",
-    "vite-plugin-top-level-await": "^1.4.1",
     "@types/react": "18.2.22",
     "@types/react-dom": "18.2.7",
     "@vitejs/plugin-react": "^3.1.0",
@@ -48,8 +48,10 @@
     "eslint-plugin-react": "7.31.11",
     "eslint-plugin-react-hooks": "4.6.0",
     "postcss": "^8.4.21",
+    "rollup-plugin-copy": "^3.5.0",
     "tailwindcss": "^3.3.3",
     "vite": "^4.2.1",
+    "vite-plugin-top-level-await": "^1.4.1",
     "wait-port": "^1.0.4"
   }
 }
