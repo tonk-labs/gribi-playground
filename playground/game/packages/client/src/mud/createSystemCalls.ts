@@ -28,11 +28,6 @@ export function createSystemCalls(
   /**
  * GRIBI Stuff
  */
-  const registerModules = async () => {
-    const tx = await worldContract.write.registerModules(['0x5424592c50E08DF0023b3ffFdb396670643274CE']);
-    await waitForTransaction(tx);
-  }
-
   const mudCall: NetworkCall = async (transaction: Transaction) => {
     let tx;
     if (transaction.proof) {
