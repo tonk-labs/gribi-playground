@@ -28,7 +28,7 @@ contract GribiSystem is System {
         BaseThread[] memory threads = new BaseThread[](1);
 
         //TODO: Register your module here
-        threads[0] = new CommitUpdatReveal();
+        threads[0] = new CommitUpdateReveal();
         rs.registerThreads(threads);
     }
 
