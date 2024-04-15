@@ -306,8 +306,8 @@ export type CommitmentArgs = {
 }
 
 export type StoredCommitment = {
-    secret: Field[],
-    salt: Field[],
+    secret: string[],
+    salt: string[],
 }
 
 export type UpdateCommitmentArgs = {
@@ -339,8 +339,8 @@ export class CreateCommitment implements Precursor<CommitmentArgs, Commitment[],
         return {
             claim: [commitment.toString()],
             witness: {
-                secret: [args.secret],
-                salt: [args.salt]
+                secret: [args.secret.toString()],
+                salt: [args.salt.toString()]
             }
         }
     }
@@ -350,10 +350,10 @@ export class UpdateCommitment implements Precursor<UpdateCommitmentArgs, Commitm
     async bond(args: UpdateCommitmentArgs): Promise<WitnessRelation<Commitment[], StoredCommitment>> {
         const commitment = (await Utils.keccak([args.salt as bigint, args.secret as bigint])).toString();
         return {
-            claim: [args.relation.claim.slice(-1)[0], commitment],
+            claim: [args.relation.claim.slice(-1)[0], commitment.toString()],
             witness: {
-                secret: [args.relation.witness.secret.slice(-1)[0], args.secret],
-                salt: [args.relation.witness.salt.slice(-1)[0], args.salt]
+                secret: [args.relation.witness.secret.slice(-1)[0], args.secret.toString()],
+                salt: [args.relation.witness.salt.slice(-1)[0], args.salt.toString()]
             }
         }
     }
@@ -377,8 +377,8 @@ export class CreateCommitmentReceptor implements Receptor<WitnessRelation<Commit
         // done correctly. You can see a sample of that circuit logic
         // in the circuit/ folder.
         const proof = await prove(EVMRootSystem.walletAddress, cc, inputs, operations, {
-            secret: args.witness.secret.toString(),
-            salt: args.witness.salt.toString()
+            secret: args.witness.secret,
+            salt: args.witness.salt
         });
 
         return {
@@ -405,8 +405,8 @@ export class UpdateCommitmentReceptor implements Receptor<UpdateCommitmentArgs, 
             },
         ];
         const proof = await prove(EVMRootSystem.walletAddress, args.circuit || cc, inputs, operations, {
-            secret: args.secret.toString(),
-            salt: args.salt.toString()
+            secret: args.secret,
+            salt: args.salt
         })
 
         return {
