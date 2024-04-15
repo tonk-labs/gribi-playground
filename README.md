@@ -1,5 +1,5 @@
 # gribi-playground
-A little playground to try out the Gribi interface
+A playground environment for hands-on learning about Gribi
 
 Setup
 ---
@@ -20,14 +20,6 @@ cd playground/module/client
 pnpm i & pnpm build
 cd playground/module/contracts
 pnpm i & pnpm build
-```
-
-### Install and build MUD game
-```
-cd playground/game/client
-pnpm i
-cd playground/game/contracts
-pnpm i
 ```
 
 ### Run the dev setup 
