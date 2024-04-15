@@ -28,7 +28,7 @@
     "@noir-lang/noir_js": "^0.23.0",
     "@noir-lang/noirc_abi": "^0.23.0",
     "backend-barretenberg,": "link:@noir-lang/backend-barretenberg,",
-    "commit-update-reveal": "../../../modules/commit-update-reveal",
+    "commit-update-reveal": "../../../modules/commit-update-reveal/client",
     "noir_js,": "link:@noir-lang/noir_js,",
     "contracts": "workspace:*",
     "react": "^18.2.0",

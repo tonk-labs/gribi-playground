@@ -6,14 +6,14 @@ settings:
 
 dependencies:
   '@gribi/evm-rootsystem':
-    specifier: ../../../gribi/packages/evm-rootsystem/packages/client
-    version: link:../../../gribi/packages/evm-rootsystem/packages/client
+    specifier: ../../../../gribi/packages/evm-rootsystem/packages/client
+    version: link:../../../../gribi/packages/evm-rootsystem/packages/client
   '@gribi/types':
-    specifier: ../../../gribi/packages/types
-    version: link:../../../gribi/packages/types
+    specifier: ../../../../gribi/packages/types
+    version: link:../../../../gribi/packages/types
   '@gribi/vault':
-    specifier: ../../../gribi/packages/vault
-    version: link:../../../gribi/packages/vault
+    specifier: ../../../../gribi/packages/vault
+    version: link:../../../../gribi/packages/vault
   '@noir-lang/backend_barretenberg':
     specifier: ^0.26.0
     version: 0.26.0

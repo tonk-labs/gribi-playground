@@ -2,16 +2,16 @@
   "name": "example-gribi-module",
   "version": "0.1.0",
   "description": "",
-  "main": "./dist/example-gribi-module.umd.js",
-  "module": "./dist/example-gribi-module.es.js",
+  "main": "./dist/hidden-assignment.umd.js",
+  "module": "./dist/hidden-assignment.es.js",
   "exports": {
     ".": {
-      "import": "./dist/example-gribi-module.es.js",
-      "require": "./dist/example-gribi-module.umd.js",
-      "types": "./dist/example-gribi-module.index.d.ts"
+      "import": "./dist/hidden-assignment.es.js",
+      "require": "./dist/hidden-assignment.umd.js",
+      "types": "./dist/hidden-assignment.index.d.ts"
     }
   },
-  "types": "./dist/example-gribi-module.index.d.ts",
+  "types": "./dist/hidden-assignment.index.d.ts",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -26,9 +26,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@gribi/evm-rootsystem": "../../../gribi/packages/evm-rootsystem/packages/client",
-    "@gribi/types": "../../../gribi/packages/types",
-    "@gribi/vault": "../../../gribi/packages/vault",
+    "@gribi/evm-rootsystem": "../../../../gribi/packages/evm-rootsystem/packages/client",
+    "@gribi/types": "../../../../gribi/packages/types",
+    "@gribi/vault": "../../../../gribi/packages/vault",
     "@noir-lang/types": "^0.26.0",
     "viem": "^2.9.6"
   },

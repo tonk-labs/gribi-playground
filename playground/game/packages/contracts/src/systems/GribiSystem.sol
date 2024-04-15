@@ -9,7 +9,7 @@ import { BaseThread, UpdateRegister } from "@gribi/evm-rootsystem/BaseThread.sol
 import { Forest } from "@gribi/evm-rootsystem/Forest.sol";
 import { addressToEntityKey } from "../addressToEntityKey.sol";
 
-import { Example } from "example-commit-update-reveal/Example.sol"; 
+import { CommitUpdateReveal } from "commit-update-reveal/CommitUpdateReveal.sol"; 
 
 contract GribiSystem is System {
     event Log(string message);
@@ -28,7 +28,7 @@ contract GribiSystem is System {
         BaseThread[] memory threads = new BaseThread[](1);
 
         //TODO: Register your module here
-        threads[0] = new Example();
+        threads[0] = new CommitUpdatReveal();
         rs.registerThreads(threads);
     }
 
@@ -40,7 +40,7 @@ contract GribiSystem is System {
         
 
         // this is revealCommitment
-        if (reg.code == uint(Example.Codes.REVEAL_COMMITMENT)) {
+        if (reg.code == uint(CommitUpdateReveal.Codes.REVEAL_COMMITMENT)) {
             //set the MUD table here for player key
             uint256 secret = abi.decode(reg.value, (uint256));
 

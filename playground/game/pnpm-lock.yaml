@@ -86,12 +86,12 @@ importers:
       backend-barretenberg,:
         specifier: link:@noir-lang/backend-barretenberg,
         version: link:@noir-lang/backend-barretenberg,
+      commit-update-reveal:
+        specifier: ../../../modules/commit-update-reveal/client
+        version: link:../../../modules/commit-update-reveal/client
       contracts:
         specifier: workspace:*
         version: link:../contracts
-      example-gribi-module:
-        specifier: ../../../module/client
-        version: link:../../../module/client
       noir_js,:
         specifier: link:@noir-lang/noir_js,
         version: link:@noir-lang/noir_js,
@@ -174,9 +174,9 @@ importers:
       '@latticexyz/world-modules':
         specifier: 2.0.1
         version: 2.0.1(typescript@5.4.2)
-      example-commit-update-reveal:
-        specifier: ../../../module/contracts
-        version: link:../../../module/contracts
+      commit-update-reveal:
+        specifier: ../../../modules/commit-update-reveal/contracts
+        version: link:../../../modules/commit-update-reveal/contracts
       viem:
         specifier: ^1.14.0
         version: 1.21.4(typescript@5.4.2)(zod@3.22.4)

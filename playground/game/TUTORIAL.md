@@ -5,11 +5,11 @@ In this tutorial, we will take a look at how a simple MUD game, Emojimon, integr
 Prerequisite: it is recommended to read the first few paragraphs of the [How to Write a Module]() tutorial to understand the high-level architecture of a Gribi module. 
 
 ## Table of Contents
-- [Setup & Install]()
-    - [Install Gribi]()
-    - [Install the Module]()
-- [gribi/Example.ts]()
-    - [Selectors]()
+- [Setup & Install](#setup--install)
+    - [Install Gribi](#install-gribi)
+    - [Install the Module](#install-the-module)
+- [gribi/CommitUpdateReveal.ts](#gribicommitupdaterevealts)
+    - [Selectors](#selectors)
 
 
 ## Setup & Install
@@ -22,7 +22,7 @@ The process of setting up and installing Gribi still requires many manual steps.
 ### Install Gribi
 
 
-> WARNING: These commands and instructions are only for new project setup. If you are using Gribi Playground this has already been setup for you, so please skip down to the [gribi/Example.ts]() section.
+> WARNING: These commands and instructions are only for new project setup. If you are using Gribi Playground this has already been setup for you, so please skip down to the [gribi/Example.ts](#gribiexamplets) section.
 
 In the `contracts/` folder run:
 ```
@@ -41,17 +41,19 @@ In `contracts/script` we have both an extra script and a modified PostDeploy.s.s
 
 In `contracts/script/PostDeploy.s.sol` we set that address into a special MUD singleton called GribiConfig. Make sure this address is the same as the one printed out when you run deployGribi.js.
 ```
-GribiConfig.set(address(0x5424592c50E08DF0023b3ffFdb396670643274CE));
+GribiConfig.set(address(0xD8163ADc3169d7dab93fe9858F9cEaEBaD7f7845));
 ```
 
 Add the following to your `mud.config.ts`
 ```
     GribiConfig: {
-      keySchema: {},
-      dataStruct: false,
-      valueSchema: {
+      key: [],
+      schema: {
         contractAddress: "address",
-      }
+      },
+      codegen: {
+        dataStruct: false
+      },
     },
 ```
 
@@ -89,7 +91,7 @@ pnpm i @gribi/evm-rootsystem @gribi/mud @gribi/types @gribi/vault
 
 In the `client/mud/setup.ts` file you will want to add the following.
 
-```
+```typescript
 import { privateState } from "../gribi/state";
 ...
 return {
@@ -119,14 +121,14 @@ If your modules include contracts, make sure to install your module with NPM int
 
 We also suggest to include a `gribi/index.ts` file which conveniently will collect all your modules together. Here is the example module used in playground.
 
-```
-import * as _Example from './Example';
+```typescript
+import * as CUR from './CommitUpdateReveal';
 import { Module, NetworkCall } from '@gribi/mud';
 
-const Example: Module<_Example.ModuleCalls> = _Example; 
+const CommitUpdateReveal: Module<CUR.ModuleCalls> = CUR; 
 
-const Modules = [
-    Example
+const Modules = [ 
+    CommitUpdateReveal
 ];
 
 export default Modules;
@@ -146,18 +148,24 @@ function registerModules(address gribiAddress) public {
 ```
 
 
-# [gribi/Example.ts]()
+# [gribi/CommitUpdateReveal.ts](packages/client/src/gribi/CommitUpdateReveal.ts)
 
-Most of the logic starts in the [client/gribi/Example.ts]() file where we wrap our logic in this line:
+Most of the logic starts in the [client/gribi/CommitUpdateReveal.ts](packages/client/src/gribi/CommitUpdateReveal.ts) file which looks something like this:
 
+```typescript
+export function createModuleCalls(call: NetworkCall)  {
+    const createCommitment = async (secret: number) => {
+        ...
+    }
+
+    //other functions here
+}
 ```
-export function createModuleCalls(call: NetworkCall) 
-```
 
-this is simply convenience for us, as the NetworkCall is simply using MUD to send the transactions through to our `GribiSystem.sol` contract.
+this is convenient for us, as the NetworkCall is simply using MUD to send the transactions through to our `GribiSystem.sol` contract.
 
-In the file [client/mud/createSystemCalls.ts]() we define our NetworkCall as follows:
-```
+In the file [client/mud/createSystemCalls.ts](packages/client/src/mud/createSystemCalls.ts) we define our NetworkCall as follows:
+```typescript
  const mudCall: NetworkCall = async (transaction: Transaction) => {
     let tx;
     if (transaction.proof) {
@@ -171,9 +179,9 @@ In the file [client/mud/createSystemCalls.ts]() we define our NetworkCall as fol
   };
 ```
 
-Now let's look at the meat of the Example.ts file by examining one of our functions.
+Now let's look at the meat of the CommitUpdateReveal.ts file. This file uses our module interfaces to configure client state, make system calls, etc and expose that to the react app much in the same way the other MUD system call functions do. `createModuleCalls` defines separate functions but they are all of similar structure, so we can just look at one of the functions as an example.
 
-```
+```typescript
 const createCommitment = async (secret: number) => {
     const salt = Utils.rng() as bigint;
     const witness = await new CreateCommitment().bond({
@@ -213,8 +221,8 @@ const createCommitment = async (secret: number) => {
 
 Selectors allow us to cleanly map entries in our Vault to entries in our React state tree. Here our selector simply returns where the latest commit is stored.
 
-[client/gribi/Example.ts]()
-```
+[client/gribi/CommitUpdateReveal.ts](packages/client/src/gribi/CommitUpdateReveal.ts)
+```typescript
 export class CommitSelector implements Selector {
     select(): number | null  {
         const entry = Vault.getDataAtSlot(EVMRootSystem.walletAddress, MODULE_ID.toString(), 0) as PrivateEntry<WitnessRelation<Commitment[], StoredCommitment>>;
@@ -230,7 +238,7 @@ export class CommitSelector implements Selector {
 
 In the state file, we can define the structure of our tree and the `createSecretState` method will format our tree in such a way which is convenient for us to read in React. Given the definition below, our secret we've committed to is revealed to the React application at:
 
-```
+```typescript
 {
     example: {
         secret: //our secret
@@ -239,10 +247,10 @@ In the state file, we can define the structure of our tree and the `createSecret
 ```
 
 
-[client/gribi/state.ts]()
-```
+[client/gribi/state.ts](packages/client/src/gribi/state.ts)
+```typescript
 import { createSecretsState } from "@gribi/mud";
-import { CommitSelector } from "./Example";
+import { CommitSelector } from "./CommitUpdateReveal";
 
 export type SecretState = {
     example: {

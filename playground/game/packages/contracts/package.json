@@ -22,7 +22,7 @@
     "@latticexyz/store": "2.0.1",
     "@latticexyz/world": "2.0.1",
     "@gribi/evm-rootsystem-contracts": "../../../../gribi/packages/evm-rootsystem/packages/contracts",
-    "example-commit-update-reveal": "../../../module/contracts",
+    "commit-update-reveal": "../../../modules/commit-update-reveal/contracts",
     "@latticexyz/world-modules": "2.0.1",
     "viem": "^1.14.0"
   },
