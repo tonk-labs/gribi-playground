@@ -23,15 +23,9 @@ export type Witness = {
     salt: bigint,
 }
 
-
-
 export type StateUpdateWithWitnessRelation = {
-    id: Field;
-    method: string;
-    inputs: PublicInput[];
-    operations: Operation[];
-    proof?: ProofData;
-    witnessRelation: WitnessRelation<Commitment, Witness>;
+    stateUpdate: StateUpdate,
+    witnessRelation: WitnessRelation<Commitment, Witness>
 };
 
 export class Position {
@@ -47,14 +41,14 @@ export type PositionUpdate = {
     currentPosition: Position,
     currentClaim: Commitment,
     circuit?: CompiledCircuit,
-    updatePosition: Position,
+    newPosition: Position,
 }
 
 
 
 
 
-export class CreateHideMovementReceptor implements Receptor<UpdateCommitmentArgs, StateUpdateWithWitnessRelation> {
+export class HideMovementReceptor implements Receptor<UpdateCommitmentArgs, StateUpdateWithWitnessRelation> {
     async signal(position: Position): Promise<Signal<StateUpdateWithWitnessRelation>> {
         // let cc = CommitCheck as CompiledCircuit;
 
@@ -82,29 +76,30 @@ export class CreateHideMovementReceptor implements Receptor<UpdateCommitmentArgs
 
         return {
             output: {
-                id: MODULE_ID,
-                method: 'createCommitment',
-                inputs: [Utils.EmptyInput()],
-                operations,
-                // proof
+                stateUpdate: {
+                    id: MODULE_ID,
+                    method: 'createCommitment',
+                    inputs: [Utils.EmptyInput()],
+                    operations,
+                    // proof,
+                },
                 witnessRelation,
             }
         }
     }
 }
-
 export class UpdatePositionReceptor implements Receptor<UpdateCommitmentArgs, StateUpdateWithWitnessRelation> {
     async signal(args: PositionUpdate): Promise<Signal<StateUpdateWithWitnessRelation>> {
         // let cc = CommitCheck as CompiledCircuit;
-        const { currentPosition, currentClaim, updatePosition } = args;
-        const positionBigInt = updatePosition.toBigInt();
+        const { currentPosition, currentClaim, newPosition: newPosition } = args;
+        const positionBigInt = newPosition.toBigInt();
         const salt = Utils.rng() as bigint;
         const commitment = (await Utils.keccak([salt, positionBigInt])).toString();
 
         const witnessRelation = {
             claim: commitment,
             witness: {
-                position: updatePosition,
+                position: newPosition,
                 salt: salt,
             }
         }
@@ -125,11 +120,13 @@ export class UpdatePositionReceptor implements Receptor<UpdateCommitmentArgs, St
 
         return {
             output: {
-                id: MODULE_ID,
-                method: 'updateCommitment',
-                inputs: [Utils.EmptyInput()],
-                operations,
-                // proof
+                stateUpdate: {
+                    id: MODULE_ID,
+                    method: 'updateCommitment',
+                    inputs: [Utils.EmptyInput()],
+                    operations,
+                    // proof
+                },
                 witnessRelation,
             }
         }
@@ -139,8 +136,8 @@ export class UpdatePositionReceptor implements Receptor<UpdateCommitmentArgs, St
 
 
 
-export class RevealCommitment implements Receptor<WitnessRelation<Commitment, Witness>, StateUpdate> {
-    async signal(args: WitnessRelation<Commitment, Witness>): Promise<Signal<StateUpdateWithWitnessRelation>> {
+export class RevealPositionReceptor implements Receptor<WitnessRelation<Commitment, Witness>, StateUpdate> {
+    async signal(args: WitnessRelation<Commitment, Witness>): Promise<Signal<StateUpdate>> {
         const { claim, witness: { salt, position } } = args;
 
         return {

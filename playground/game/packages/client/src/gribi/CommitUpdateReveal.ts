@@ -1,83 +1,74 @@
 import { NetworkCall, Selector } from '@gribi/mud';
-import { WitnessRelation } from '@gribi/types'; 
+import { WitnessRelation } from '@gribi/types';
 import { EVMRootSystem } from '@gribi/evm-rootsystem';
 import { Vault, Utils, PrivateEntry } from '@gribi/vault';
-import { 
-    Commitment,
-    CreateCommitment,
-    CreateCommitmentReceptor,
+import {
+    Position,
+    UpdatePositionReceptor,
+    HideMovementReceptor,
     MODULE_ID,
-    RevealCommitment,
-    StoredCommitment,
-    UpdateCommitment,
-    UpdateCommitmentReceptor
-} from 'commit-update-reveal';
+    Commitment,
+    Witness,
+    StateUpdateWithWitnessRelation,
+    RevealPositionReceptor
+
+} from 'hidden-movement';
 
 export type ModuleCalls = ReturnType<typeof createModuleCalls>;
 
 export function createModuleCalls(call: NetworkCall) {
 
-    const createCommitment = async (secret: number) => {
-        const salt = Utils.rng() as bigint;
-        const witness = await new CreateCommitment().bond({
-            secret, 
-            salt,
-        });
+    const hide = async (position: Position) => {
 
-        const entry = {
-            slot: 0,
-            value: witness.toString() 
+
+
+
+        const { output: { stateUpdate, witnessRelation } } = await new HideMovementReceptor().signal(position);
+
+        const txs = await EVMRootSystem.createTxs([stateUpdate]);
+        const entry = { slot: 0, value: witnessRelation.toString() };
+        await Promise.all(txs.map(async (tx: any) => await call(tx)));
+
+        Vault.setEntry(EVMRootSystem.walletAddress, MODULE_ID.toString(), entry);
+    }
+
+    const updatePosition = async (newPosition: Position) => {
+        const entry = Vault.getDataAtSlot(EVMRootSystem.walletAddress, MODULE_ID.toString(), 0) as PrivateEntry<WitnessRelation<Commitment, Witness>>;
+        const positionUpdate = {
+            currentClaim: entry.value.claim,
+            currentPosition: entry.value.witness.position,
+            newPosition
         }
 
-        const signal = await new CreateCommitmentReceptor().signal(witness);
-        const txs = await EVMRootSystem.createTxs([signal]);
+        const { output: { stateUpdate, witnessRelation } } = await new UpdatePositionReceptor().signal(positionUpdate);
+        entry.value = witnessRelation.toString();
+        const txs = await EVMRootSystem.createTxs([stateUpdate]);
         await Promise.all(txs.map(async (tx: any) => await call(tx)));
         Vault.setEntry(EVMRootSystem.walletAddress, MODULE_ID.toString(), entry);
     }
 
-    const updateCommitment = async (newSecret: number) => {
-        const salt = Utils.rng() as bigint;
-        const entry = Vault.getDataAtSlot(EVMRootSystem.walletAddress, MODULE_ID.toString(), 0) as PrivateEntry<WitnessRelation<Commitment[], StoredCommitment>>;
-        const witness = await new UpdateCommitment().bond({
-            relation: entry.value, 
-            secret: newSecret,
-            salt,
-        });
-
-        const signal = await new UpdateCommitmentReceptor().signal({
-            relation: witness,
-            secret: newSecret,
-            salt
-        });
-
-        entry.value = witness.toString();
-        const txs = await EVMRootSystem.createTxs([signal]);
-        await Promise.all(txs.map(async (tx: any) => await call(tx)));
-        Vault.setEntry(EVMRootSystem.walletAddress, MODULE_ID.toString(), entry);
-    }
-
-    const revealCommitment = async () => {
-        const entry = Vault.getDataAtSlot(EVMRootSystem.walletAddress, MODULE_ID.toString(), 0) as PrivateEntry<WitnessRelation<Commitment[], StoredCommitment>>;
-        const signal = await new RevealCommitment().signal(entry.value);
+    const revealPosition = async () => {
+        const entry = Vault.getDataAtSlot(EVMRootSystem.walletAddress, MODULE_ID.toString(), 0) as PrivateEntry<WitnessRelation<Commitment, Witness>>;
+        const signal = await new RevealPositionReceptor().signal(entry.value);
         const txs = await EVMRootSystem.createTxs([signal]);
         await Promise.all(txs.map(async (tx: any) => await call(tx)));
         Vault.removeEntry(EVMRootSystem.walletAddress, MODULE_ID.toString(), entry);
     }
 
     return {
-        createCommitment,
-        updateCommitment,
-        revealCommitment
+        hide,
+        updatePosition,
+        revealPosition
     }
 }
 
 export class CommitSelector implements Selector {
-    select(): number | null  {
-        const entry = Vault.getDataAtSlot(EVMRootSystem.walletAddress, MODULE_ID.toString(), 0) as PrivateEntry<WitnessRelation<Commitment[], StoredCommitment>>;
+    select(): number | null {
+        const entry = Vault.getDataAtSlot(EVMRootSystem.walletAddress, MODULE_ID.toString(), 0) as PrivateEntry<WitnessRelation<Commitment, Witness>>;
         if (!entry) {
             return null;
         } else {
-            return entry.value.witness.secret.slice(-1)[0] as number;
+            return entry.value.witness.position as Position;
         }
     }
 }
