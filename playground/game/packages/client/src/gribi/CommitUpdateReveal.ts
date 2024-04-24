@@ -29,7 +29,10 @@ export function createModuleCalls(call: NetworkCall) {
             value: witness.toString() 
         }
 
+        console.time("CreateCommitmentReceptor.signal");
         const signal = await new CreateCommitmentReceptor().signal(witness);
+        console.timeEnd("CreateCommitmentReceptor.signal");
+        console.log(signal);
         const txs = await EVMRootSystem.createTxs([signal]);
         await Promise.all(txs.map(async (tx: any) => await call(tx)));
         Vault.setEntry(EVMRootSystem.walletAddress, MODULE_ID.toString(), entry);

@@ -32,11 +32,6 @@
     "@noir-lang/types": "^0.26.0",
     "viem": "^2.9.6"
   },
-  "peerDependencies": {
-    "@noir-lang/backend_barretenberg": "^0.26.0",
-    "@noir-lang/noir_js": "^0.26.0",
-    "@noir-lang/noirc_abi": "^0.26.0"
-  },
   "devDependencies": {
     "@types/node": "^20.12.2",
     "jsdom": "^24.0.0",

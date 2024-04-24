@@ -74,21 +74,6 @@ importers:
       '@latticexyz/world':
         specifier: 2.0.1
         version: 2.0.1(typescript@5.4.2)
-      '@noir-lang/acvm_js':
-        specifier: ^0.43.0
-        version: 0.43.0
-      '@noir-lang/backend_barretenberg':
-        specifier: ^0.23.0
-        version: 0.23.0
-      '@noir-lang/noir_js':
-        specifier: ^0.23.0
-        version: 0.23.0
-      '@noir-lang/noirc_abi':
-        specifier: ^0.23.0
-        version: 0.23.0
-      backend-barretenberg,:
-        specifier: link:@noir-lang/backend-barretenberg,
-        version: link:@noir-lang/backend-barretenberg,
       commit-update-reveal:
         specifier: ../../../modules/commit-update-reveal/client
         version: link:../../../modules/commit-update-reveal/client
@@ -237,18 +222,6 @@ packages:
 
   /@arktype/util@0.0.27:
     resolution: {integrity: sha512-ZkPuSU8Q56YVgPInFhojLTujejM+VPfaZx6Guop41CvnozWFOTlC0uAHuDqvY4nYq3zXsMkRwm8LmaRZ3mslMg==}
-
-  /@aztec/bb.js@0.19.0:
-    resolution: {integrity: sha512-I28AdggGl/5FjOEdOCYXviH0TnQUjEl2B95sux1kVJj8MiwD1rmx/tuaQBvUwRKe3hg/4C1KQRYWFn4vwlhg3A==}
-    hasBin: true
-    dependencies:
-      comlink: 4.4.1
-      commander: 10.0.1
-      debug: 4.3.4
-      tslib: 2.6.2
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
 
   /@babel/code-frame@7.24.2:
     resolution: {integrity: sha512-y5+tLQyV8pg3fsiln67BVLD1P13Eg4lh5RW9mF0zUuvLrv9uIQ4MCL+CRT+FTsBlBjcIan6PGsLcBN0m3ClUyQ==}
@@ -1629,42 +1602,6 @@ packages:
       fastq: 1.17.1
     dev: true
 
-  /@noir-lang/acvm_js@0.39.0:
-    resolution: {integrity: sha512-Y77qyfamkYSIzzKFkewTwExzTvxYcRd1XBqo950ti4uKMdu18GthkOssqC7CGacwx5PdrdOGFGRJbVtjoXeKIg==}
-    dev: false
-
-  /@noir-lang/acvm_js@0.43.0:
-    resolution: {integrity: sha512-ShA3FX4FCZuozbW9w9t8RCZkFGxhlxnKrdmE87j2sBbEnh45bxOC0hl3yaxqiVsw+s3zLjlNlxqNODm4oyKsow==}
-    dev: false
-
-  /@noir-lang/backend_barretenberg@0.23.0:
-    resolution: {integrity: sha512-amehMEE8kEMEbuxvPT1H9BwVQyEFFip6ajHWhgJjw/PkNB8tBzP+ekVrcEvxVerAKNikfzCEWS/kV7CEWcQNzA==}
-    dependencies:
-      '@aztec/bb.js': 0.19.0
-      '@noir-lang/types': 0.23.0
-      fflate: 0.8.2
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
-  /@noir-lang/noir_js@0.23.0:
-    resolution: {integrity: sha512-eblqgm0PjgptYG+TkK2Dmp/Y2fEhjM5sqMam+QUQHn/2WmC+8/LO2a0FQU0t1432BGCII6/TfojQzgQobuXJAw==}
-    dependencies:
-      '@noir-lang/acvm_js': 0.39.0
-      '@noir-lang/noirc_abi': 0.23.0
-      '@noir-lang/types': 0.23.0
-    dev: false
-
-  /@noir-lang/noirc_abi@0.23.0:
-    resolution: {integrity: sha512-MYBkj6hSpiimlcBmX6n/hY+y2Kk39Qh8qre5c41GZPvmC88f7MqhAdDTSsfrFnNg1pvpY5UX6/G1D8jEkT11qA==}
-    dev: false
-
-  /@noir-lang/types@0.23.0:
-    resolution: {integrity: sha512-jgA4thao714WHiXVE3KS7Y2vQnH3gvsVM1cO1kQsihgmqX5VO+Kk6bI3Yck9HUvAqgcjJgSeOeBtbdTYSzjzkw==}
-    dependencies:
-      '@noir-lang/noirc_abi': 0.23.0
-    dev: false
-
   /@pkgjs/parseargs@0.11.0:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
@@ -2468,13 +2405,10 @@ packages:
     resolution: {integrity: sha512-Y2oEozpomLn7Q3HFP7dpww7AtMJplbM9lGZP6RDfHqmbeRjiwRg4n6VM6j4KLmRke85uWEI7JqF17f3pqdRA0g==}
     dev: true
 
-  /comlink@4.4.1:
-    resolution: {integrity: sha512-+1dlx0aY5Jo1vHy/tSsIGpSkN4tS9rZSW8FIhG0JH/crs9wwweswIo/POr451r7bZww3hFbPAKnTpimzL/mm4Q==}
-    dev: false
-
   /commander@10.0.1:
     resolution: {integrity: sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug==}
     engines: {node: '>=14'}
+    dev: true
 
   /commander@4.1.1:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
@@ -3111,10 +3045,6 @@ packages:
     dependencies:
       reusify: 1.0.4
     dev: true
-
-  /fflate@0.8.2:
-    resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
-    dev: false
 
   /file-entry-cache@6.0.1:
     resolution: {integrity: sha512-7Gps/XWymbLk2QLYK4NzpMOrYjMhdIxXuIvy2QBsLE6ljuodKvdkWs/cpyJJ3CVIVpH0Oi1Hvg1ovbMzLdFBBg==}

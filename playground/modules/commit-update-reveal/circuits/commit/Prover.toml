@@ -1,0 +1,79 @@
+address = "0x9abca78a3ac0a43f2776b8e1da0d5d6e62078768315564458f00cf8bd8bb2e"
+salt = "0xe8e1fd548995aa1780235b32ca5195050f898d9aecfba4009388824898f82d"
+secret = "0x0"
+commitment = "0x21c418d83d736aad0860803c962fec2a567ca98c4cbb9a0cec65a68afe12cbfb"
+commitment_root = "0x123456789abcdef"
+nullifier_root = "0x123456789abcdef"
+public_root = "0x123456789abcdef"
+
+[[inputs]]
+slot = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[inputs]]
+slot = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[inputs]]
+slot = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[inputs]]
+slot = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[inputs]]
+slot = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[inputs]]
+slot = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[inputs]]
+slot = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[inputs]]
+slot = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[operations]]
+opid = "0"
+nullifier = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[operations]]
+opid = "0"
+nullifier = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[operations]]
+opid = "0"
+nullifier = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[operations]]
+opid = "0"
+nullifier = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[operations]]
+opid = "0"
+nullifier = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[operations]]
+opid = "0"
+nullifier = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[operations]]
+opid = "0"
+nullifier = "0x123456789abcdef"
+value = "0x123456789abcdef"
+
+[[operations]]
+opid = "0"
+nullifier = "0x123456789abcdef"
+value = "0x123456789abcdef"
