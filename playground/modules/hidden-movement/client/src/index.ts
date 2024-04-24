@@ -93,7 +93,7 @@ export class CreateHideMovementReceptor implements Receptor<UpdateCommitmentArgs
     }
 }
 
-export class UpdateCommitmentReceptor implements Receptor<UpdateCommitmentArgs, StateUpdateWithWitnessRelation> {
+export class UpdatePositionReceptor implements Receptor<UpdateCommitmentArgs, StateUpdateWithWitnessRelation> {
     async signal(args: PositionUpdate): Promise<Signal<StateUpdateWithWitnessRelation>> {
         // let cc = CommitCheck as CompiledCircuit;
         const { currentPosition, currentClaim, updatePosition } = args;
