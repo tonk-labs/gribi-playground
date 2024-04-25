@@ -5,6 +5,8 @@ import {
     Receptor,
 } from '@gribi/types';
 import { WitnessRelation, Precursor } from '@gribi/types';
+import { Vault } from '@gribi/vault';
+import { NetworkCall } from '@gribi/mud';
 import { Utils } from "@gribi/vault";
 import { EVMRootSystem, StateUpdate, prove } from "@gribi/evm-rootsystem";
 import { CompiledCircuit } from '@noir-lang/backend_barretenberg';
@@ -104,5 +106,55 @@ export class RevealCommitment implements Receptor<WitnessRelation<Commitment, Jo
                 // proof
             }
         }
+    }
+}
+
+export class HiddenState {
+    private call: NetworkCall;
+    private vault: typeof Vault;
+    private rs: typeof EVMRootSystem;
+
+    constructor(call: NetworkCall, vault: typeof Vault, rs: typeof EVMRootSystem) {
+        this.call = call;
+        this.vault = vault;
+        this.rs = rs;
+    }
+
+    /**
+     * Creates a commitment to randomness on-chain
+     */
+    async claim(commitmentKey: number) {
+        const randomness = await new CreateRandomness().bond(undefined);
+        const signal = await new RandomnessReceptor().signal(randomness);
+        const txs = await this.rs.createTxs([signal]);
+        const entry = {
+            slot: commitmentKey,
+            value: randomness
+        }
+        await Promise.all(txs.map(async (tx: any) => await this.call(tx)));
+        Vault.setEntry(this.rs.walletAddress, MODULE_ID.toString(), entry);
+    }
+
+    /**
+     * 
+     * @param chainRandom the random number generated on-chain and used to create joint randomness
+     * @param commitmentKey the key that is used to determine the item slot both client-side and onchain
+     */
+    async reveal(chainRandom: number, commitmentKey: number) {
+        const entry = this.vault.getDataAtSlot(this.rs.walletAddress, MODULE_ID.toString(), commitmentKey);
+        const relation = entry?.value as WitnessRelation<Commitment, StoredCommitment>;
+        const jointRandomness = {
+            chainRandom, 
+            commitmentKey,
+            myRandom: relation.witness.randomness,
+        }
+        const revealRelation = {
+            claim: relation.claim,
+            witness: jointRandomness
+        }
+        const signal = await new RevealCommitment().signal(revealRelation);
+        const txs = await this.rs.createTxs([signal]);
+        await Promise.all(txs.map(async (tx: any) => await this.call(tx)));
+        Vault.removeEntry(this.rs.walletAddress, MODULE_ID.toString(), entry!);
     }
 }
