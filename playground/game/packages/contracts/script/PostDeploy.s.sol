@@ -72,7 +72,7 @@ contract PostDeploy is Script {
     MapConfig.set(width, height, terrain);
 
     //SETUP GRIBI
-    GribiConfig.set(address(0xD8163ADc3169d7dab93fe9858F9cEaEBaD7f7845));
+    GribiConfig.set(address(0x314148f32d95CDD3E6B12134166e59e29c1a155B));
     // need to test if this works
     IWorld(worldAddress).registerModules();
 
