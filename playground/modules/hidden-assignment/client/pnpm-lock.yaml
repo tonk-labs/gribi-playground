@@ -8,6 +8,9 @@ dependencies:
   '@gribi/evm-rootsystem':
     specifier: ../../../../gribi/packages/evm-rootsystem/packages/client
     version: link:../../../../gribi/packages/evm-rootsystem/packages/client
+  '@gribi/mud':
+    specifier: ../../../../gribi/packages/mud-integration
+    version: link:../../../../gribi/packages/mud-integration
   '@gribi/types':
     specifier: ../../../../gribi/packages/types
     version: link:../../../../gribi/packages/types
