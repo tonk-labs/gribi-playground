@@ -1,144 +1,112 @@
 import { keccak256, toHex } from 'viem';
-import { 
-    Signal, 
-    Field,
-    Receptor,
-} from '@gribi/types';
-import { WitnessRelation, Precursor } from '@gribi/types';
 import { Utils } from "@gribi/vault";
-import { EVMRootSystem, StateUpdate, prove, NoirCircuit } from "@gribi/evm-rootsystem";
 
-import CommitCheck from '../../circuits/commit/target/commit.json';
 
 export const MODULE_ID = BigInt(keccak256(toHex("example-module")));
 
 export type Commitment = string;
-export type CommitmentArgs = {
-    secret: Field,
-    salt: Field,
+export type Salt = bigint;
+export type Proof = string;
+export type Secret = string;
+
+interface CommitUpdateRevealContractInterface {
+    commit(commitment: Commitment, proof: Proof): void;
+    update(commitment: Commitment, proof: Proof, nullifier: Commitment): void;
+    reveal(commitment: Commitment, salt: Salt, secret: Secret): void;
 }
 
-export type StoredCommitment = {
-    secret: string[],
-    salt: string[],
+
+
+
+interface Prover {
+    (secret: Secret, salt: Salt): Promise<Proof>;
+}
+export type Witness = {
+    salt: Salt;
+    secret: Secret;
 }
 
-export type UpdateCommitmentArgs = {
-    relation: WitnessRelation<Commitment[], StoredCommitment>,
-    circuit?: NoirCircuit,
-    secret: Field,
-    salt: Field,
+export type FullProof = {
+    commitment: Commitment;
+    witness: Witness
+    proof: Proof;
 }
 
-export class CreateCommitment implements Precursor<CommitmentArgs, Commitment[], StoredCommitment> {
-    async bond(args: CommitmentArgs): Promise<WitnessRelation<Commitment[], StoredCommitment>> {
-        const commitment = (await Utils.pedersenHash([args.secret as bigint, args.salt as bigint])).toString();
+export type CommitState = {
+    salt: Salt;
+    secret: Secret;
+    proof: Proof;
+    commitment: Commitment;
+    nullifier?: Commitment;
+}
+
+export interface WitnessStore {
+    get(commitment: Commitment): Witness;
+    set(commitment: Commitment, witness: Witness): void;
+    clear(commitment: Commitment): void;
+}
+
+
+export interface SaltGenerator {
+    (): bigint;
+}
+export interface CommitUpdateRevealInterface {
+    contracts: CommitUpdateRevealContractInterface;
+    prover: Prover;
+    witnesses: WitnessStore;
+    saltGenerator: SaltGenerator;
+    commit(secret: Secret): Promise<CommitState>;
+    update(secret: string, nullifier: string): Promise<CommitState>;
+    reveal(commitment: string): Promise<void>;
+}
+
+const rng = (): bigint => Utils.rng() as bigint;
+
+export class CommitUpdateReveal {
+    contracts: CommitUpdateRevealContractInterface;
+    prover: Prover;
+    witnesses: WitnessStore;
+    saltGenerator = rng;
+    constructor(contracts: CommitUpdateRevealContractInterface, witnesses: WitnessStore, prover: Prover) {
+        this.contracts = contracts
+        this.prover = prover;
+        this.witnesses = witnesses;
+    }
+
+    async createCommitment(secret: Secret, salt: Salt): Promise<Commitment> {
+
+        return (await Utils.keccak([salt, BigInt(secret)])).toString();
+    }
+
+    async extractProof(secret: Secret): Promise<FullProof> {
+        const salt = this.saltGenerator();
+        const commitment = await this.createCommitment(secret, salt);
+        const proof = await this.prover(secret, salt);
         return {
-            claim: [commitment.toString()],
-            witness: {
-                secret: [args.secret.toString()],
-                salt: [args.salt.toString()]
-            }
+            commitment,
+            witness: { salt, secret },
+            proof
         }
+    }
+
+    async commit(secret: Secret): Promise<CommitState> {
+        const { commitment, proof, witness: { salt } } = await this.extractProof(secret);
+        this.contracts.commit(commitment, proof);
+        this.witnesses.set(commitment, { salt, secret });
+        return { salt, secret, proof, commitment };
+    }
+
+    async update(secret: string, nullifier: string): Promise<CommitState> {
+        const { commitment, proof, witness: { salt } } = await this.extractProof(secret);
+        this.contracts.update(commitment, proof, nullifier);
+        this.witnesses.set(commitment, { salt, secret });
+        return { salt, secret, proof, commitment, nullifier };
+    }
+    async reveal(commitment: string): Promise<void> {
+        const { salt, secret } = this.witnesses.get(commitment);
+        this.contracts.reveal(commitment, salt, secret);
     }
 }
 
-export class UpdateCommitment implements Precursor<UpdateCommitmentArgs, Commitment[], StoredCommitment> {
-    async bond(args: UpdateCommitmentArgs): Promise<WitnessRelation<Commitment[], StoredCommitment>> {
-        const commitment = (await Utils.pedersenHash([args.secret as bigint, args.salt as bigint])).toString();
-        return {
-            claim: [args.relation.claim.slice(-1)[0], commitment],
-            witness: {
-                secret: [args.relation.witness.secret.slice(-1)[0], args.secret.toString()],
-                salt: [args.relation.witness.salt.slice(-1)[0], args.salt.toString()]
-            }
-        }
-    }
-}
 
-export class CreateCommitmentReceptor implements Receptor<WitnessRelation<Commitment[], StoredCommitment>, StateUpdate> {
-    async signal(args: WitnessRelation<Commitment[], StoredCommitment>): Promise<Signal<StateUpdate>> {
-        let cc = CommitCheck as NoirCircuit;
-        const inputs =  [Utils.EmptyInput()];
-        const operations = [{
-            opid: toHex(0),
-            value: toHex(BigInt(args.claim.slice(-1)[0])),
-            nullifier: toHex(0),
-        }];
-
-        // Disabling because of build errors
-        const proof = await prove(EVMRootSystem.walletAddress, cc, [], operations, {
-            commitment: toHex(BigInt(args.claim.slice(-1)[0])),
-            secret: toHex(BigInt(args.witness.secret.slice(-1)[0].toString())),
-            salt: toHex(BigInt(args.witness.salt.slice(-1)[0].toString()))
-        });
-
-        return {
-            output: {
-                id: MODULE_ID,
-                method: 'createCommitment',
-                inputs,
-                operations,
-                proof
-            }
-        }
-    }
-}
-
-export class UpdateCommitmentReceptor implements Receptor<UpdateCommitmentArgs, StateUpdate> {
-    async signal(args: UpdateCommitmentArgs): Promise<Signal<StateUpdate>> {
-        // let cc = CommitCheck as CompiledCircuit;
-        const inputs = [Utils.EmptyInput()];
-        const operations = [
-            {
-                opid: 0,
-                value: BigInt(args.relation.claim[1]),
-                nullifier: BigInt(args.relation.claim[0]),
-            },
-        ];
-
-        // Disabling because of build errors
-        // const proof = await prove(EVMRootSystem.walletAddress, args.circuit || cc, inputs, operations, {
-        //     secret: args.secret.toString(),
-        //     salt: args.salt.toString()
-        // })
-
-        return {
-            output: {
-                id: MODULE_ID,
-                method: 'updateCommitment',
-                inputs,
-                operations,
-                // proof
-            }
-        }
-    }
-}
-
-export class RevealCommitment implements Receptor<WitnessRelation<Commitment[], StoredCommitment>, StateUpdate> {
-    async signal(args: WitnessRelation<Commitment[], StoredCommitment>): Promise<Signal<StateUpdate>> {
-        const commitment = args.claim.slice(-1)[0];
-        const secret = args.witness.secret.slice(-1)[0];
-        const salt = args.witness.salt.slice(-1)[0];
-        return {
-            output: {
-                id: MODULE_ID,
-                method: "revealCommitment",
-                inputs: [{
-                    slot: 0,
-                    value: commitment
-                }, {
-                    slot: 0,
-                    value: BigInt(salt)
-                }, {
-                    slot: 0,
-                    value: BigInt(secret)
-                }],
-                operations: [{
-                    opid: 0,
-                    nullifier: commitment
-                }]
-            }
-        }
-    }
-}
+CommitUpdateReveal

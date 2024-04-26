@@ -1,6 +1,6 @@
 import { keccak256, toHex } from 'viem';
-import { 
-    Signal, 
+import {
+    Signal,
     Field,
     Receptor,
 } from '@gribi/types';
@@ -10,6 +10,7 @@ import { NetworkCall } from '@gribi/mud';
 import { Utils } from "@gribi/vault";
 import { EVMRootSystem, StateUpdate, prove } from "@gribi/evm-rootsystem";
 import { CompiledCircuit } from '@noir-lang/backend_barretenberg';
+import { an } from 'vitest/dist/reporters-P7C2ytIv';
 
 // import RandomnessCheck from '../../circuits/generate/target/generate.json';
 // import RevealCheck from '../../circuits/reveal/target/reveal.json';
@@ -41,7 +42,7 @@ export class CreateRandomness implements Precursor<undefined, Commitment, Stored
         return {
             claim: commitment.toString(),
             witness: {
-                randomness: randomness.toString(), 
+                randomness: randomness.toString(),
             }
         }
     }
@@ -50,7 +51,7 @@ export class CreateRandomness implements Precursor<undefined, Commitment, Stored
 export class RandomnessReceptor implements Receptor<WitnessRelation<Commitment, StoredCommitment>, StateUpdate> {
     async signal(args: WitnessRelation<Commitment, StoredCommitment>): Promise<Signal<StateUpdate>> {
         // let cc = RandomnessCheck as CompiledCircuit;
-        const inputs =  [Utils.EmptyInput()];
+        const inputs = [Utils.EmptyInput()];
         const operations = [{
             opid: 0,
             value: BigInt(args.claim),
@@ -109,7 +110,9 @@ export class RevealCommitment implements Receptor<WitnessRelation<Commitment, Jo
     }
 }
 
-export class HiddenState {
+
+
+export class HiddenStatel {
     private call: NetworkCall;
     private vault: typeof Vault;
     private rs: typeof EVMRootSystem;
@@ -144,7 +147,7 @@ export class HiddenState {
         const entry = this.vault.getDataAtSlot(this.rs.walletAddress, MODULE_ID.toString(), commitmentKey);
         const relation = entry?.value as WitnessRelation<Commitment, StoredCommitment>;
         const jointRandomness = {
-            chainRandom, 
+            chainRandom,
             commitmentKey,
             myRandom: relation.witness.randomness,
         }
@@ -157,4 +160,78 @@ export class HiddenState {
         await Promise.all(txs.map(async (tx: any) => await this.call(tx)));
         Vault.removeEntry(this.rs.walletAddress, MODULE_ID.toString(), entry!);
     }
+}
+
+///// UNFINSHED CODE BELOW
+
+export type Commitment = string;
+export type Randomness = string;
+
+
+export type JointRandomness = {
+    secret: bigint;
+    received: bigint;
+    commitment: bigint;
+}
+export interface HiddenStateContractInterface {
+    claim(commitment: Commitment): void;
+    reveal(secret: Randomness, received: Randomness): void;
+}
+
+export interface HiddenStateStoreInterface {
+    commitments: Map<Commitment, Randomness>;
+    get(commitment: Commitment): Randomness;
+    set(commitment: Commitment, randomness: Randomness): void;
+    clear(commitment: Commitment): void;
+}
+
+export type RandomClaim = {
+    commitment: Commitment;
+    randomness: Randomness;
+}
+
+export interface RandomClaimGenerator {
+    (): RandomClaim;
+}
+
+
+export const rcg = (): RandomClaim => {
+    const randomness = Utils.rng();
+    return { randomness: randomness.toString(), commitment: (await Utils.keccak([randomness as bigint])).toString() }
+};
+
+export interface HiddenStateInterface {
+    contract: HiddenStateContractInterface;
+    store: HiddenStateStoreInterface;
+    randomClaimGenerator: RandomClaimGenerator;
+    claim(commitment: Commitment): Promise<RandomClaim>;
+    reveal(received: Randomness, commitment: Commitment): void;
+
+}
+
+export class HiddenState implements HiddenStateInterface {
+    contract: HiddenStateContractInterface;
+    store: HiddenStateStoreInterface;
+    randomClaimGenerator = rcg;
+
+    constructor(contract: HiddenStateContractInterface, store: HiddenStateStoreInterface) {
+        this.contract = contract;
+        this.store = store;
+    }
+
+    async claim(): Promise<RandomClaim> {
+        const { commitment, randomness } = this.randomClaimGenerator();
+        this.store.set(commitment, randomness);
+        this.contract.claim(commitment);
+        return { commitment, randomness };
+    }
+
+    async reveal(received: Randomness, commitment: Commitment) {
+        const randomness = this.store.get(commitment);
+        this.contract.reveal(commitment, randomness);
+        this.store.clear(commitment);
+
+    }
+
+
 }
